@@ -1,0 +1,84 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+model Admin {
+  id         String       @id @default(uuid())
+  nome       String
+  email      String       @unique
+  senha      String       
+  criadoEm   DateTime     @default(now())
+  
+  observacoes Observacao[] 
+}
+
+model Evento {
+  id         String       @id @default(uuid())
+  nome       String       
+  tipo       String       // CENACULO, KIDS, CENACULAO, FESTIVIDADE, OUTRO
+  status     String       @default("ABERTO") // ABERTO ou FECHADO
+  dataInicio DateTime
+  criadoEm   DateTime     @default(now())
+  
+  inscricoes Inscricao[]  
+  fotos      Foto[]       // Relacionamento 1-N: Um evento pode ter várias fotos na galeria
+}
+
+model Foto {
+  id        String   @id @default(uuid())
+  url       String   // URL da imagem
+  criadoEm  DateTime @default(now())
+
+  eventoId  String
+  evento    Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+}
+
+model Inscricao {
+  id                  String       @id @default(uuid())
+  nomeCompleto        String
+  instagram           String?
+  email               String
+  cidade              String
+  telefone            String
+  jaFezCenaculo       String?
+  dataNascimento      DateTime
+  problemaSaude       String?
+  paroquiaAtuante     String?
+  medicacaoControlada String?
+  restricaoAlimentar  String?
+  atendimentoEspecial String?
+  comoConheceu        String?
+  criadoEm            DateTime     @default(now())
+
+  eventoId            String
+  evento              Evento       @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  
+  observacoes         Observacao[] 
+}
+
+model Observacao {
+  id          String    @id @default(uuid())
+  texto       String
+  criadoEm    DateTime  @default(now())
+
+  adminId     String
+  admin       Admin     @relation(fields: [adminId], references: [id])
+
+  inscricaoId String
+  inscricao   Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+}
+
+// NOVA TABELA: Lista de Espera / Pré-cadastro
+model PreCadastro {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String
+  telefone  String
+  tipo      String   @default("CENACULO") // CENACULO, KIDS ou CENACULAO
+  criadoEm  DateTime @default(now())
+}
