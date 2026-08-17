@@ -31,7 +31,7 @@ export default async function AdminGaleriaPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
+    <div className="max-w-screen-2xl mx-auto w-full pb-20">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-cenaculo-blue">Gerenciar Galeria</h1>
         <p className="text-gray-600 mt-2">Vincule imagens aos eventos para criar álbuns públicos. As fotos são salvas na nuvem.</p>

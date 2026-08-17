@@ -1,35 +1,42 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import FiltroEspera from "./FiltroEspera";
 
 export const revalidate = 0;
 
-export default async function EsperaPage() {
-  // Busca todos os cadastros em ordem do mais recente para o mais antigo
+export default async function EsperaPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
+  // Lê a URL para saber se tem algum filtro aplicado
+  const resolvedParams = await searchParams;
+  const tipoFiltro = resolvedParams.tipo || "";
+
+  // Se houver filtro, adiciona a regra no Prisma. Se não, busca tudo.
+  const whereClause = tipoFiltro ? { tipo: tipoFiltro } : {};
+
   const preCadastros = await prisma.preCadastro.findMany({
+    where: whereClause,
     orderBy: { criadoEm: 'desc' }
   });
 
-  // Server Action para excluir o lead da lista depois que ele for contatado
   async function excluirPreCadastro(formData: FormData) {
     "use server";
     const id = formData.get("id") as string;
     
-    await prisma.preCadastro.delete({
-      where: { id }
-    });
-    
+    await prisma.preCadastro.delete({ where: { id } });
     revalidatePath("/admin/espera");
   }
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-8 flex justify-between items-end">
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-cenaculo-blue">Lista de Espera</h1>
           <p className="text-gray-600 mt-2">
             Contatos aguardando a abertura de novas vagas. Total: <span className="font-bold">{preCadastros.length}</span>
           </p>
         </div>
+        
+        {/* Adicionamos o Componente de Filtro aqui no canto superior direito */}
+        <FiltroEspera tipoAtual={tipoFiltro} />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
@@ -66,7 +73,6 @@ export default async function EsperaPage() {
                   </td>
                   
                   <td className="p-4 text-center">
-                    {/* Formulário para chamar a exclusão do banco */}
                     <form action={excluirPreCadastro}>
                       <input type="hidden" name="id" value={pre.id} />
                       <button 
@@ -85,7 +91,7 @@ export default async function EsperaPage() {
               {preCadastros.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-12 text-center text-gray-500">
-                    A lista de espera está vazia no momento.
+                    {tipoFiltro ? "Nenhum cadastro encontrado para este tipo de retiro." : "A lista de espera está vazia no momento."}
                   </td>
                 </tr>
               )}

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import StatusDropdown from "./StatusDropdown"
 import BotaoDeletar from "../BotaoDeletar";
+import FormNovoEvento from "./FormNovoEvento"; // 🔴 IMPORTAMOS O NOVO FORMULÁRIO
 
 export const revalidate = 0;
 
@@ -11,118 +12,119 @@ export default async function EventosPage() {
     orderBy: { criadoEm: 'desc' }
   });
 
+  // 🔴 AÇÃO ATUALIZADA PARA RECEBER OS NOVOS CAMPOS
   async function criarEvento(formData: FormData) {
     "use server";
     const nome = formData.get("nome") as string;
     const tipo = formData.get("tipo") as string;
     const dataInicio = new Date(formData.get("dataInicio") as string);
+    
+    // Pegando os novos campos
+    const duracaoDias = parseInt(formData.get("duracaoDias") as string) || 1;
+    const dataAberturaRaw = formData.get("dataAbertura") as string;
+    const dataAbertura = dataAberturaRaw ? new Date(dataAberturaRaw) : new Date(); // Se não colocar, abre na hora
+    const imagemCapa = formData.get("imagemCapa") as string || null;
 
     await prisma.evento.create({
-      data: { nome, tipo, dataInicio, status: "ABERTO" }
+      data: { 
+        nome, 
+        tipo, 
+        dataInicio, 
+        dataAbertura, 
+        duracaoDias, 
+        imagemCapa,
+        status: "AUTOMATICO" // O evento nasce automatizado por padrão!
+      }
     });
     revalidatePath("/admin/eventos");
+    revalidatePath("/calendario");
   }
 
-  // 🔴 NOVA AÇÃO: Alternar Status
-async function mudarStatus(formData: FormData) {
+  async function mudarStatus(formData: FormData) {
     "use server";
     const id = formData.get("id") as string;
     const novoStatus = formData.get("novoStatus") as string;
-    
-    await prisma.evento.update({
-      where: { id },
-      data: { status: novoStatus }
-    });
+    await prisma.evento.update({ where: { id }, data: { status: novoStatus } });
     revalidatePath("/admin/eventos");
+    revalidatePath("/calendario");
   }
 
   async function excluirEvento(formData: FormData) {
-  "use server";
-  const id = formData.get("id") as string;
-  await prisma.evento.delete({ where: { id } });
-  revalidatePath("/admin/eventos");
-  revalidatePath("/calendario"); // Atualiza o calendário público na hora
-}
+    "use server";
+    const id = formData.get("id") as string;
+    await prisma.evento.delete({ where: { id } });
+    revalidatePath("/admin/eventos");
+    revalidatePath("/calendario");
+  }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-screen-2xl mx-auto w-full pb-20">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-cenaculo-blue">Gerenciar Eventos</h1>
-        <p className="text-gray-600 mt-2">Crie novos cursos e abra inscrições para a comunidade.</p>
+        <p className="text-gray-600 mt-2">Crie novos cursos com automação de status e abertura de vagas.</p>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Abrir Novo Evento</h2>
-        <form action={criarEvento} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Evento</label>
-            <input type="text" name="nome" required placeholder="Ex: 83º Cenáculo" className="w-full p-2 border border-gray-300 rounded focus:ring-cenaculo-gold" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-<select name="tipo" className="w-full p-2 border border-gray-300 rounded focus:ring-cenaculo-gold bg-white">
-  <option value="CENACULO">Cenáculo (Tradicional)</option>
-  <option value="KIDS">Cenáculo Kids</option>
-  <option value="CENACULAO">Cenaculão</option>
-  <option value="FESTIVIDADE">Festividade / Comemoração</option>
-  <option value="OUTRO">Outro Evento</option>
-</select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
-            <input type="date" name="dataInicio" required className="w-full p-2 border border-gray-300 rounded focus:ring-cenaculo-gold" />
-          </div>
-          <div className="md:col-span-4 mt-2 text-right">
-            <button type="submit" className="bg-cenaculo-blue text-white font-bold py-2 px-6 rounded hover:bg-[#1a1d7a] transition shadow">
-              + Cadastrar Evento
-            </button>
-          </div>
-        </form>
-      </div>
+      {/* 🔴 AQUI ENTRA O NOSSO NOVO FORMULÁRIO CLIENT-SIDE */}
+      <FormNovoEvento criarEventoAction={criarEvento} />
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-        <table className="w-full text-left">
+        <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[720px]">
           <thead className="bg-gray-50">
             <tr>
               <th className="p-4 font-semibold text-sm text-gray-600">Evento</th>
-              <th className="p-4 font-semibold text-sm text-gray-600">Tipo</th>
-              <th className="p-4 font-semibold text-sm text-gray-600">Data</th>
-              <th className="p-4 font-semibold text-sm text-gray-600">Status</th>
+              <th className="p-4 font-semibold text-sm text-gray-600">Automação (Início / Fim)</th>
+              <th className="p-4 font-semibold text-sm text-gray-600">Status Controle</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {eventos.map(evento => (
               <tr key={evento.id} className="hover:bg-gray-50">
-                <td className="p-4 font-bold">
-                  <Link href={`/admin?eventoId=${evento.id}`} className="text-cenaculo-blue hover:text-cenaculo-gold transition underline-offset-4 hover:underline">
-                    {evento.nome}
-                  </Link>
+                <td className="p-4 font-bold align-top">
+                  <div className="flex items-center gap-3">
+                    {evento.imagemCapa && (
+                      <img src={evento.imagemCapa} alt="Capa" className="w-12 h-12 rounded object-cover shadow-sm" />
+                    )}
+                    <div>
+                      <Link href={`/admin?eventoId=${evento.id}`} className="text-cenaculo-blue hover:text-cenaculo-gold transition underline-offset-4 hover:underline text-lg">
+                        {evento.nome}
+                      </Link>
+                      <div className="text-xs text-gray-500 mt-1 uppercase tracking-wider">{evento.tipo}</div>
+                    </div>
+                  </div>
                 </td>
-                <td className="p-4 text-sm text-gray-600">{evento.tipo}</td>
-                <td className="p-4 text-sm text-gray-600">
-                  {new Date(evento.dataInicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                
+                <td className="p-4 text-sm text-gray-600 align-top">
+                  {evento.dataAbertura ? (
+                    <div className="space-y-1">
+                      <p><span className="font-bold text-green-600">Abre:</span> {new Date(evento.dataAbertura).toLocaleDateString('pt-BR')} às {new Date(evento.dataAbertura).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p><span className="font-bold text-red-600">Fecha:</span> {new Date(evento.dataInicio).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p>
+                      <p className="text-xs text-gray-400 mt-1">Duração: {evento.duracaoDias} dia(s)</p>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 italic">Sem datas automáticas</span>
+                  )}
                 </td>
-<td className="p-4 flex items-center gap-2">
-               <StatusDropdown 
-                 eventoId={evento.id} 
-                 statusAtual={evento.status} 
-                 mudarStatus={mudarStatus} 
-               />
-               <div className="w-20">
-                 <BotaoDeletar 
-                   id={evento.id} 
-                   action={excluirEvento} 
-                   aviso={`ATENÇÃO: Excluir o evento '${evento.nome}' vai apagar definitivamente TODAS as inscrições, observações e a galeria de FOTOS vinculadas a ele! Tem certeza absoluta?`}
-                 />
-               </div>
-             </td>
+
+                <td className="p-4 flex items-center gap-2 align-top">
+                  {/* O dropdown agora tem a opção 'AUTOMATICO' */}
+                  <StatusDropdown eventoId={evento.id} statusAtual={evento.status} mudarStatus={mudarStatus} />
+                  
+                  <div className="w-20">
+                    <BotaoDeletar 
+                      id={evento.id} action={excluirEvento} 
+                      aviso={`ATENÇÃO: Excluir o evento '${evento.nome}' vai apagar TODAS as inscrições e FOTOS! Tem certeza?`}
+                    />
+                  </div>
+                </td>
               </tr>
             ))}
             {eventos.length === 0 && (
-              <tr><td colSpan={4} className="p-8 text-center text-gray-500">Nenhum evento cadastrado.</td></tr>
+              <tr><td colSpan={3} className="p-8 text-center text-gray-500">Nenhum evento cadastrado.</td></tr>
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

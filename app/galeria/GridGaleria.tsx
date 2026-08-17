@@ -10,7 +10,7 @@ export default function GridGaleria({ fotos, eventoNome }: { fotos: any[]; event
   return (
     <>
       {/* GRELHA EXPANDIDA PARA MAX-W-7XL (Fica incrível em monitores largos) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 w-full">
         {fotos.map((foto) => (
           <div 
             key={foto.id} 

@@ -69,7 +69,7 @@ export default function TabelaInscritos({ inscricoes, excluirInscricao }: { insc
       {/* Tabela (resto do código inalterado) */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[980px] text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 text-gray-700">
                 <th className="p-4 font-bold text-sm">Nome / Contato</th>

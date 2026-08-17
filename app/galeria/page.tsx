@@ -21,13 +21,13 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
       <main className="min-h-screen bg-gray-50 flex flex-col pb-20">
         {/* O fundo azul estica a 100%, mas o conteúdo central expande até max-w-7xl */}
         <header className="bg-cenaculo-blue text-white py-20 px-6 text-center shadow-inner w-full">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-screen-2xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Nossa <span className="text-cenaculo-gold">História</span></h1>
             <p className="text-lg text-gray-200 max-w-2xl mx-auto">Relembre os momentos inesquecíveis vividos em nossos retiros e encontros.</p>
           </div>
         </header>
 
-        <section className="max-w-7xl mx-auto px-6 mt-12 w-full">
+        <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 mt-12 w-full">
           {eventosComFotos.length === 0 ? (
             <div className="text-center p-12 bg-white rounded-xl shadow-sm border border-gray-200 max-w-xl mx-auto">
               <p className="text-gray-500 font-medium">Ainda não temos álbuns de fotos publicados.</p>
@@ -75,7 +75,7 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col pb-20">
       <header className="bg-cenaculo-blue text-white py-16 px-6 text-center shadow-inner w-full">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-screen-2xl mx-auto">
           <h1 className="text-4xl font-extrabold mb-2">Galeria de <span className="text-cenaculo-gold">Fotos</span></h1>
           <p className="text-lg text-gray-200">Recordações do {evento.nome}</p>
           <Link href="/galeria" className="inline-block mt-6 text-sm text-gray-300 hover:text-white transition">
@@ -85,7 +85,7 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
       </header>
 
       {/* Passa as fotos para o nosso novo Grid Inteligente com Lightbox */}
-      <section className="max-w-7xl mx-auto px-6 mt-12 w-full">
+      <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 mt-12 w-full">
         <GridGaleria fotos={evento.fotos} eventoNome={evento.nome} />
       </section>
     </main>

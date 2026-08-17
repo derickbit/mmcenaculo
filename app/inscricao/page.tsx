@@ -1,22 +1,39 @@
 import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export const revalidate = 0;
+
+// 🔴 FUNÇÃO INTELIGENTE DE STATUS
+function getStatusReal(evento: any) {
+  if (evento.status !== "AUTOMATICO") return evento.status;
+  
+  const agora = new Date();
+  const inicio = new Date(evento.dataInicio);
+  const abertura = evento.dataAbertura ? new Date(evento.dataAbertura) : inicio;
+  
+  const fim = new Date(inicio);
+  fim.setDate(inicio.getDate() + (evento.duracaoDias || 1));
+
+  if (agora < abertura) return "AGUARDANDO";
+  if (agora >= abertura && agora < inicio) return "ABERTO";
+  if (agora >= inicio && agora < fim) return "FECHADO";
+  
+  return "CONCLUIDO";
+}
 
 export default async function InscricaoPage({ searchParams }: { searchParams: Promise<{ e?: string, sucessoPre?: string }> }) {
   const params = await searchParams;
   const eventoEscolhidoId = params.e;
   const exibiuSucessoPre = params.sucessoPre === "true";
 
-async function salvarPreCadastro(formData: FormData) {
+  async function salvarPreCadastro(formData: FormData) {
     "use server";
     const nome = formData.get("nome") as string;
     const email = formData.get("email") as string;
     const telefone = formData.get("telefone") as string;
-    const tipo = formData.get("tipo") as string; // Pega o novo campo
+    const tipo = formData.get("tipo") as string;
 
     if (!nome || !email || !telefone) return;
 
@@ -24,20 +41,41 @@ async function salvarPreCadastro(formData: FormData) {
       data: { nome, email, telefone, tipo }
     });
 
-    // Redirecionamento real que muda a URL e ativa a mensagem de sucesso
     redirect("/inscricao?sucessoPre=true");
   }
 
-  // Busca TODOS os eventos que estão abertos
-  const eventosAbertos = await prisma.evento.findMany({
-    where: { status: 'ABERTO' },
-    orderBy: { criadoEm: 'desc' }
+  // 1. Busca TODOS os eventos para podermos aplicar a lógica de data inteligente
+  const todosEventos = await prisma.evento.findMany({
+    orderBy: { dataInicio: 'asc' } // Do mais próximo para o mais distante
   });
+
+  // 2. Filtra dinamicamente apenas os que estão realmente ABERTOS agora (Manual ou Automático)
+  const eventosAbertos = todosEventos.filter(ev => getStatusReal(ev) === "ABERTO");
+
+  // 3. TRAVA DE SEGURANÇA: Se a pessoa tentou forçar a URL de um evento que não está aberto
+  if (eventoEscolhidoId) {
+    const eventoAlvo = todosEventos.find(ev => ev.id === eventoEscolhidoId);
+    if (eventoAlvo && getStatusReal(eventoAlvo) !== "ABERTO") {
+      return (
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-cenaculo-blue text-center max-w-md">
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-3">Inscrições Indisponíveis</h2>
+            <p className="text-gray-600 mb-8">
+              As inscrições para o <strong>{eventoAlvo.nome}</strong> ainda não começaram ou já foram encerradas.
+            </p>
+            <Link href="/calendario" className="inline-block bg-cenaculo-gold text-cenaculo-blue font-bold px-8 py-3 rounded-lg hover:bg-yellow-400 transition shadow-md">
+              Ver Calendário
+            </Link>
+          </div>
+        </main>
+      );
+    }
+  }
 
   // CENÁRIO 1: Nenhum evento aberto -> RENDERIZA A LISTA DE ESPERA
   if (eventosAbertos.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50 py-12 px-4 flex items-center justify-center">
+      <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12 flex items-center justify-center">
         <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-2xl shadow-xl border-t-8 border-cenaculo-gold">
           
           {exibiuSucessoPre ? (
@@ -110,7 +148,7 @@ async function salvarPreCadastro(formData: FormData) {
   // CENÁRIO 2: O usuário já sabe qual evento quer (ou só tem 1 aberto)
   if (eventoParaFormulario) {
     return (
-      <main className="min-h-screen bg-gray-50 py-12 px-4">
+      <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12">
         <Formulario 
           eventoId={eventoParaFormulario.id} 
           eventoNome={eventoParaFormulario.nome} 
@@ -122,8 +160,8 @@ async function salvarPreCadastro(formData: FormData) {
 
   // CENÁRIO 3: Tem mais de um aberto e a pessoa ainda não escolheu
   return (
-    <main className="min-h-screen bg-gray-50 py-16 px-4 flex flex-col items-center">
-      <div className="max-w-3xl w-full text-center mb-12">
+    <main className="min-h-screen bg-gray-50 py-16 px-4 sm:px-6 lg:px-10 xl:px-12">
+      <div className="max-w-5xl w-full mx-auto text-center mb-12">
         <h1 className="text-4xl font-extrabold text-cenaculo-blue mb-4">
           Escolha o seu <span className="text-cenaculo-gold">Retiro</span>
         </h1>
@@ -132,7 +170,7 @@ async function salvarPreCadastro(formData: FormData) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
         {eventosAbertos.map(evento => (
           <Link 
             href={`/inscricao?e=${evento.id}`} 

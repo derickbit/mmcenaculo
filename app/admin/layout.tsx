@@ -18,17 +18,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    // Trava o tamanho do site inteiro no limite da tela
-    <div className="h-screen w-full bg-gray-100 flex overflow-hidden">
+    <div className="h-full min-h-0 w-full bg-gray-100 flex flex-col md:flex-row overflow-hidden md:h-[calc(100dvh-5rem)] md:min-h-[calc(100dvh-5rem)]">
       
-      {/* Menu Lateral Estritamente Fixo */}
-      <aside className="w-64 flex-shrink-0 bg-cenaculo-blue text-white flex flex-col shadow-xl z-20">
+      <aside className="w-full md:w-64 md:h-full md:flex-shrink-0 bg-cenaculo-blue text-white flex flex-col shadow-xl z-20">
         <div className="p-6 text-2xl font-extrabold border-b border-[#1a1d7a]">
           Painel <span className="text-cenaculo-gold">MMC</span>
         </div>
         
-        {/* Navegação fixa sem scroll */}
-        <nav className="flex-1 p-4 space-y-2 mt-4">
+        <nav className="flex-1 p-3 md:p-4 space-y-2 md:mt-4 overflow-x-auto md:overflow-visible whitespace-nowrap md:whitespace-normal">
           <Link href="/admin/eventos" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/eventos') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Gerenciar Eventos
           </Link>
@@ -41,6 +38,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/galeria" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/galeria') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Galeria de Fotos
           </Link>
+          <Link href="/admin/frequencia" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/frequencia') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+            Frequência e Presença
+          </Link>
         </nav>
         
         {/* Botão de Sair fixo no fundo */}
@@ -51,8 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Conteúdo Principal (Apenas esta área rola) */}
-      <main className="flex-1 h-full p-8 overflow-y-auto relative">
+      <main className="flex-1 min-h-0 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
         {children}
       </main>
     </div>

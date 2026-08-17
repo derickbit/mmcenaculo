@@ -18,13 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="scroll-smooth">
-      <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50 text-gray-900`}>
+      <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50 text-gray-900 overflow-x-hidden`}>
         
         {/* NAVBAR PÚBLICA */}
 {/* NAVBAR PÚBLICA */}
         <nav className="bg-cenaculo-blue text-white sticky top-0 z-40 shadow-md border-b border-cenaculo-gold/30">
-          {/* Mudado de max-w-6xl para max-w-7xl e px-6 */}
-          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12 h-20 flex items-center justify-between gap-4">
             
             {/* Logo + Nome */}
             <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
@@ -41,7 +40,7 @@ export default function RootLayout({
             </Link>
 
             {/* Links de Navegação */}
-            <div className="flex items-center gap-1 sm:gap-4 md:gap-6 text-sm font-bold">
+            <div className="flex items-center gap-1 sm:gap-4 md:gap-6 text-xs sm:text-sm font-bold max-w-full overflow-x-auto whitespace-nowrap [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <Link href="/" className="px-3 py-2 rounded-lg hover:bg-white/10 transition">
                 Início
               </Link>
@@ -66,7 +65,7 @@ export default function RootLayout({
         </nav>
 
         {/* CONTEÚDO DA PÁGINA */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0 w-full">
           {children}
         </div>
 

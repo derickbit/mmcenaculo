@@ -18,15 +18,20 @@ model Admin {
 }
 
 model Evento {
-  id         String       @id @default(uuid())
-  nome       String       
-  tipo       String       // CENACULO, KIDS, CENACULAO, FESTIVIDADE, OUTRO
-  status     String       @default("ABERTO") // ABERTO ou FECHADO
-  dataInicio DateTime
-  criadoEm   DateTime     @default(now())
+  id           String      @id @default(uuid())
+  nome         String       
+  tipo         String      // CENACULO, KIDS, CENACULAO, FESTIVIDADE, OUTRO
+  status       String      @default("AUTOMATICO") // Pode ser ABERTO, FECHADO, CONCLUIDO ou AUTOMATICO
+  dataInicio   DateTime
+  criadoEm     DateTime    @default(now())
   
-  inscricoes Inscricao[]  
-  fotos      Foto[]       // Relacionamento 1-N: Um evento pode ter várias fotos na galeria
+  // 🔴 NOVOS CAMPOS PARA AUTOMAÇÃO E VISUAL
+  imagemCapa   String?     // URL da imagem no Cloudinary
+  dataAbertura DateTime?   // Quando o sistema deve abrir as vagas sozinho
+  duracaoDias  Int         @default(1) // 1, 2 ou 3 dias
+
+  inscricoes   Inscricao[]  
+  fotos        Foto[]       
 }
 
 model Foto {
@@ -81,4 +86,40 @@ model PreCadastro {
   telefone  String
   tipo      String   @default("CENACULO") // CENACULO, KIDS ou CENACULAO
   criadoEm  DateTime @default(now())
+}
+
+// 1. O "Elenco" da comunidade
+model Membro {
+  id             String     @id @default(uuid())
+  nome           String
+  grupo          String     // Ex: "Grupo São José"
+  cenaculoFeito  String?    // Ex: "83º Cenáculo"
+  criadoEm       DateTime   @default(now())
+  
+  presencas      Presenca[] // Ligação mágica do Prisma
+}
+
+// 2. Os eventos menores (Missas, Reuniões, etc)
+model Atividade {
+  id          String     @id @default(uuid())
+  nome        String     
+  data        DateTime
+  criadoEm    DateTime   @default(now())
+  
+  presencas   Presenca[] // Ligação mágica do Prisma
+}
+
+// 3. O registro de quem foi em qual atividade (A "Chamada")
+model Presenca {
+  id          String    @id @default(uuid())
+  criadoEm    DateTime  @default(now())
+
+  membroId    String
+  membro      Membro    @relation(fields: [membroId], references: [id], onDelete: Cascade)
+  
+  atividadeId String
+  atividade   Atividade @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+
+  // Essa regra bloqueia que um coordenador dê presença duas vezes pra mesma pessoa no mesmo evento!
+  @@unique([membroId, atividadeId]) 
 }

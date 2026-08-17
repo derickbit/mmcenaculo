@@ -81,7 +81,7 @@ export default function Formulario({
 
   if (sucesso) {
     return (
-      <div className="bg-white p-10 rounded-xl shadow-lg text-center max-w-lg mx-auto border-t-8 border-cenaculo-gold mt-12">
+      <div className="bg-white p-8 sm:p-10 rounded-xl shadow-lg text-center max-w-xl mx-auto border-t-8 border-cenaculo-gold mt-12">
         <h2 className="text-3xl font-bold text-cenaculo-blue mb-4">Inscrição Confirmada!</h2>
         <p className="text-gray-600 mb-8">Sua vaga para o <strong>{eventoNome}</strong> foi reservada com sucesso.</p>
         <button onClick={() => window.location.href = '/'} className="bg-cenaculo-blue text-white font-bold py-3 px-8 rounded-full">
@@ -92,7 +92,7 @@ export default function Formulario({
   }
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg border-t-8 border-cenaculo-blue">
+    <div className="max-w-5xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-8 border-cenaculo-blue">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-extrabold text-cenaculo-blue">
           Inscreva-se no <span className="text-cenaculo-gold">{eventoNome}</span>
