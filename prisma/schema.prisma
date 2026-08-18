@@ -123,3 +123,11 @@ model Presenca {
   // Essa regra bloqueia que um coordenador dê presença duas vezes pra mesma pessoa no mesmo evento!
   @@unique([membroId, atividadeId]) 
 }
+
+model Usuario {
+  id             String   @id @default(uuid())
+  nome           String   @unique
+  senha          String
+  primeiroAcesso Boolean  @default(true) // 🔴 NOVO: Todo usuário nasce precisando trocar a senha
+  criadoEm       DateTime @default(now())
+}

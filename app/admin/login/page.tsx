@@ -18,14 +18,22 @@ export default function LoginPage() {
 
     try {
       // Enviando email e senha
-      const response = await fetch('/api/login', {
+const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha }),
+        // 🔴 ATENÇÃO: Tem que ser { nome: email, senha } e não { email, senha }
+        body: JSON.stringify({ nome: email, senha }), 
       });
 
-      if (response.ok) {
-        router.push('/admin');
+if (response.ok) {
+        const data = await response.json();
+        
+        // 🔴 Se for primeiro acesso, manda para redefinir a senha!
+        if (data.primeiroAcesso) {
+          router.push(`/admin/setup?usuario=${encodeURIComponent(email)}`);
+        } else {
+          router.push('/admin');
+        }
         router.refresh();
       } else {
         const data = await response.json();
@@ -53,23 +61,23 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* NOVO CAMPO DE EMAIL */}
-          <div>
+<div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              E-mail
+              Nome de Usuário
             </label>
             <input 
-              type="email" 
-              value={email}
+              type="text" 
+              value={email} // Mudei visualmente, mas pode manter o state "email" (agora sendo usado para o nome) ou renomear o state para "nome"
               onChange={(e) => setEmail(e.target.value)}
               required 
-              placeholder="admin@mmcenaculo.com.br"
+              placeholder="Ex: Joao"
               className="block w-full p-3 border border-gray-300 rounded-lg focus:ring-cenaculo-gold focus:border-cenaculo-gold outline-none transition-all"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Senha de Acesso
+              Senha
             </label>
             <input 
               type="password" 

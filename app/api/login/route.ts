@@ -1,41 +1,55 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    // Agora receberemos email e senha da tela de login
-    const { email, senha } = await request.json();
+    const body = await request.json();
+    const { nome, senha } = body;
 
-    // 1. Busca o usuário no banco de dados
-    const admin = await prisma.admin.findUnique({
-      where: { email: email }
+    const usuario = await prisma.usuario.findUnique({
+      where: { nome: nome }
     });
 
-    if (!admin) {
+    if (!usuario) {
       return NextResponse.json({ error: 'Usuário não encontrado!' }, { status: 401 });
     }
 
-    // 2. Compara a senha digitada com o Hash do banco de dados
-    const senhaValida = await bcrypt.compare(senha, admin.senha);
+    let senhaValida = false;
 
-    if (senhaValida) {
-      const response = NextResponse.json({ message: 'Login efetuado!' }, { status: 200 });
-      
-      // Entrega o Cookie, agora guardando o ID do Admin para sabermos quem está logado
-      response.cookies.set({
-        name: 'cenaculo-admin-token',
-        value: admin.id, // No futuro, isso será um JWT. Por enquanto, o ID resolve.
-        httpOnly: true,
-        path: '/',
-        maxAge: 86400, // 1 dia
-      });
-
-      return response;
+    // Se for PRIMEIRO ACESSO, aceita texto puro ("123") ou Hash
+    if (usuario.primeiroAcesso) {
+      senhaValida = (senha === usuario.senha) || await bcrypt.compare(senha, usuario.senha);
+    } else {
+      // Se não for primeiro acesso, exige a senha criptografada normal
+      senhaValida = await bcrypt.compare(senha, usuario.senha);
     }
 
-    return NextResponse.json({ error: 'Senha incorreta!' }, { status: 401 });
+    if (!senhaValida) {
+      return NextResponse.json({ error: 'Senha incorreta!' }, { status: 401 });
+    }
+
+    const response = NextResponse.json({ 
+      message: 'Login realizado com sucesso',
+      primeiroAcesso: usuario.primeiroAcesso // 🔴 Avisa o frontend se é o primeiro acesso!
+    }, { status: 200 });
+    
+    response.cookies.set('cenaculo-admin-token', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
+    response.cookies.set('cenaculo-user-nome', usuario.nome, {
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
+    return response;
+
   } catch (error) {
-    return NextResponse.json({ error: 'Erro no servidor' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro interno no servidor' }, { status: 500 });
   }
 }
