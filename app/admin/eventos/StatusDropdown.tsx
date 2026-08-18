@@ -13,13 +13,12 @@ export default function StatusDropdown({
     <form action={mudarStatus}>
       <input type="hidden" name="id" value={eventoId} />
       
-      {/* O 'key' mágico! Ele avisa o React: Se o statusAtual mudar no banco, jogue esse select no lixo e crie outro. */}
+      {/* O 'key' mágico! */}
       <select
         key={statusAtual} 
         name="novoStatus"
         defaultValue={statusAtual}
         onChange={(e) => {
-          // Quando clica, apenas manda o form pro servidor. O Next.js cuida do resto.
           e.target.form?.requestSubmit();
         }} 
         className={`text-xs font-bold px-3 py-1 rounded-full outline-none cursor-pointer border shadow-sm transition-colors ${
@@ -27,12 +26,18 @@ export default function StatusDropdown({
             ? 'bg-green-50 text-green-700 border-green-200' 
             : statusAtual === 'FECHADO' 
               ? 'bg-red-50 text-red-700 border-red-200'
-              : 'bg-gray-200 text-gray-700 border-gray-300' // CONCLUIDO
+              : statusAtual === 'AUTOMATICO'
+                ? 'bg-blue-50 text-cenaculo-blue border-blue-200'
+                : statusAtual === 'AGUARDANDO'
+                  ? 'bg-orange-50 text-orange-700 border-orange-200'
+                  : 'bg-gray-100 text-gray-500 border-gray-200' // CONCLUIDO
         }`}
       >
-        <option value="ABERTO">ABERTO</option>
-        <option value="FECHADO">FECHADO</option>
-        <option value="CONCLUIDO">CONCLUÍDO</option>
+        <option value="AUTOMATICO">Automação Inteligente</option>
+        <option value="AGUARDANDO">Aguardando (Em Breve)</option>
+        <option value="ABERTO">Aberto</option>
+        <option value="FECHADO">Fechado</option>
+        <option value="CONCLUIDO">Concluído</option>
       </select>
     </form>
   );

@@ -12,17 +12,23 @@ export default async function EventosPage() {
     orderBy: { criadoEm: 'desc' }
   });
 
-  // 🔴 AÇÃO ATUALIZADA PARA RECEBER OS NOVOS CAMPOS
-  async function criarEvento(formData: FormData) {
+async function criarEvento(formData: FormData) {
     "use server";
     const nome = formData.get("nome") as string;
     const tipo = formData.get("tipo") as string;
-    const dataInicio = new Date(formData.get("dataInicio") as string);
     
-    // Pegando os novos campos
-    const duracaoDias = parseInt(formData.get("duracaoDias") as string) || 1;
+    // Pegando as datas cruas do formulário
+    const dataInicioRaw = formData.get("dataInicio") as string;
     const dataAberturaRaw = formData.get("dataAbertura") as string;
-    const dataAbertura = dataAberturaRaw ? new Date(dataAberturaRaw) : new Date(); // Se não colocar, abre na hora
+    
+    // 🔴 O SEGREDO DO FUSO HORÁRIO BRASILEIRO (-03:00)
+    // Forçamos a dataInicio para ser Meia-Noite no horário de Brasília
+    const dataInicio = new Date(`${dataInicioRaw}T00:00:00-03:00`);
+    
+    // Forçamos a data de abertura para obedecer o fuso do Brasil
+    const dataAbertura = dataAberturaRaw ? new Date(`${dataAberturaRaw}-03:00`) : new Date();
+
+    const duracaoDias = parseInt(formData.get("duracaoDias") as string) || 1;
     const imagemCapa = formData.get("imagemCapa") as string || null;
 
     await prisma.evento.create({
@@ -33,11 +39,12 @@ export default async function EventosPage() {
         dataAbertura, 
         duracaoDias, 
         imagemCapa,
-        status: "AUTOMATICO" // O evento nasce automatizado por padrão!
+        status: "AUTOMATICO"
       }
     });
     revalidatePath("/admin/eventos");
     revalidatePath("/calendario");
+    revalidatePath("/inscricao");
   }
 
   async function mudarStatus(formData: FormData) {
