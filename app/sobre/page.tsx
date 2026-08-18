@@ -113,7 +113,7 @@ export default function SobrePage() {
           
           <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-xl border-4 border-white">
             <Image 
-              src="/images/hero_bg.jpg" 
+              src="/images/hero_bg.png" 
               alt="Comunidade Cenáculo" 
               fill 
               className="object-cover" 
