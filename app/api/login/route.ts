@@ -1,55 +1,56 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
+import { NextResponse } from "next/server";
+import { createHash, timingSafeEqual } from "node:crypto";
+import bcrypt from "bcryptjs";
+import prisma from "@/lib/prisma";
+import { COOKIE_SESSAO, criarToken, opcoesCookieSessao } from "@/lib/session";
+
+// Hash descartável: gasta o mesmo tempo quando o usuário não existe,
+// para não revelar quais usuários estão cadastrados.
+const HASH_FALSO = bcrypt.hashSync("senha-invalida", 10);
+
+function iguaisEmTempoConstante(a: string, b: string): boolean {
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { nome, senha } = body;
+    const { nome, senha } = await request.json();
 
-    const usuario = await prisma.usuario.findUnique({
-      where: { nome: nome }
-    });
-
-    if (!usuario) {
-      return NextResponse.json({ error: 'Usuário não encontrado!' }, { status: 401 });
+    if (typeof nome !== "string" || typeof senha !== "string" || !nome || !senha) {
+      return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
     }
 
-    let senhaValida = false;
+    const usuario = await prisma.usuario.findUnique({ where: { nome } });
 
-    // Se for PRIMEIRO ACESSO, aceita texto puro ("123") ou Hash
-    if (usuario.primeiroAcesso) {
-      senhaValida = (senha === usuario.senha) || await bcrypt.compare(senha, usuario.senha);
+    let senhaValida = false;
+    if (!usuario) {
+      await bcrypt.compare(senha, HASH_FALSO);
+    } else if (usuario.primeiroAcesso) {
+      // Senha provisória cadastrada à mão no banco (texto puro) ou já em hash.
+      senhaValida =
+        iguaisEmTempoConstante(senha, usuario.senha) ||
+        (await bcrypt.compare(senha, usuario.senha));
     } else {
-      // Se não for primeiro acesso, exige a senha criptografada normal
       senhaValida = await bcrypt.compare(senha, usuario.senha);
     }
 
-    if (!senhaValida) {
-      return NextResponse.json({ error: 'Senha incorreta!' }, { status: 401 });
+    if (!usuario || !senhaValida) {
+      // Mesma mensagem nos dois casos.
+      return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
     }
 
-    const response = NextResponse.json({ 
-      message: 'Login realizado com sucesso',
-      primeiroAcesso: usuario.primeiroAcesso // 🔴 Avisa o frontend se é o primeiro acesso!
-    }, { status: 200 });
-    
-    response.cookies.set('cenaculo-admin-token', 'true', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+    const token = await criarToken(usuario.nome, usuario.primeiroAcesso);
 
-    response.cookies.set('cenaculo-user-nome', usuario.nome, {
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
-
+    const response = NextResponse.json(
+      { message: "Login realizado com sucesso", primeiroAcesso: usuario.primeiroAcesso },
+      { status: 200 }
+    );
+    response.cookies.set(COOKIE_SESSAO, token, opcoesCookieSessao());
     return response;
-
   } catch (error) {
-    return NextResponse.json({ error: 'Erro interno no servidor' }, { status: 500 });
+    console.error("Erro no login:", error);
+    return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 });
   }
 }

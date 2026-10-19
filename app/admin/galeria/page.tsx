@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Image from "next/image";
 import UploaderImagens from "./UploaderImagens";
+import { exigirSessao } from "@/lib/auth";
 
 export const revalidate = 0;
 
@@ -14,6 +15,7 @@ export default async function AdminGaleriaPage() {
   // Server Action: Pega a URL do Cloudinary e salva no Prisma
   async function salvarFotoNoBanco(eventoId: string, url: string) {
     "use server";
+    await exigirSessao();
     await prisma.foto.create({
       data: { eventoId, url }
     });
@@ -24,6 +26,7 @@ export default async function AdminGaleriaPage() {
   // Server Action: Deletar Foto
   async function removerFoto(formData: FormData) {
     "use server";
+    await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.foto.delete({ where: { id } });
     revalidatePath("/admin/galeria");

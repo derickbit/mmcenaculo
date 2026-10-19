@@ -4,6 +4,7 @@ import Link from "next/link";
 import StatusDropdown from "./StatusDropdown"
 import BotaoDeletar from "../BotaoDeletar";
 import FormNovoEvento from "./FormNovoEvento"; // 🔴 IMPORTAMOS O NOVO FORMULÁRIO
+import { exigirSessao } from "@/lib/auth";
 
 export const revalidate = 0;
 
@@ -14,6 +15,7 @@ export default async function EventosPage() {
 
 async function criarEvento(formData: FormData) {
     "use server";
+    await exigirSessao();
     const nome = formData.get("nome") as string;
     const tipo = formData.get("tipo") as string;
     
@@ -49,6 +51,7 @@ async function criarEvento(formData: FormData) {
 
   async function mudarStatus(formData: FormData) {
     "use server";
+    await exigirSessao();
     const id = formData.get("id") as string;
     const novoStatus = formData.get("novoStatus") as string;
     await prisma.evento.update({ where: { id }, data: { status: novoStatus } });
@@ -58,6 +61,7 @@ async function criarEvento(formData: FormData) {
 
   async function excluirEvento(formData: FormData) {
     "use server";
+    await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.evento.delete({ where: { id } });
     revalidatePath("/admin/eventos");

@@ -30,7 +30,7 @@ if (response.ok) {
         
         // 🔴 Se for primeiro acesso, manda para redefinir a senha!
         if (data.primeiroAcesso) {
-          router.push(`/admin/setup?usuario=${encodeURIComponent(email)}`);
+          router.push('/admin/setup');
         } else {
           router.push('/admin');
         }
