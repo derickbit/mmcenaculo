@@ -38,7 +38,7 @@ function paraBase64Url(bytes: Uint8Array): string {
   return btoa(binario).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function deBase64Url(texto: string): Uint8Array {
+function deBase64Url(texto: string): Uint8Array<ArrayBuffer> {
   const preenchimento = "=".repeat((4 - (texto.length % 4)) % 4);
   const binario = atob(texto.replace(/-/g, "+").replace(/_/g, "/") + preenchimento);
   return Uint8Array.from(binario, (c) => c.charCodeAt(0));
