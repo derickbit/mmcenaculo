@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import FiltroEspera from "./FiltroEspera";
+import { exigirSessao } from "@/lib/auth";
 
 export const revalidate = 0;
 
@@ -19,6 +20,7 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
 
   async function excluirPreCadastro(formData: FormData) {
     "use server";
+    await exigirSessao();
     const id = formData.get("id") as string;
     
     await prisma.preCadastro.delete({ where: { id } });

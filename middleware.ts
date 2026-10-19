@@ -1,22 +1,32 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { COOKIE_SESSAO, verificarToken } from "@/lib/session";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
-  // 🔴 Liberamos o /admin/login E TAMBÉM o /admin/setup
-  if (path.startsWith('/admin') && path !== '/admin/login' && path !== '/admin/setup') {
-    
-    const temSessao = request.cookies.has('cenaculo-admin-token');
+  // A tela de login é a única rota do admin aberta sem sessão.
+  if (path === "/admin/login") return NextResponse.next();
 
-    if (!temSessao) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
+  const sessao = await verificarToken(request.cookies.get(COOKIE_SESSAO)?.value);
+
+  if (!sessao) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  // Senha provisória: só pode acessar a tela de troca de senha.
+  if (sessao.pa && path !== "/admin/setup") {
+    return NextResponse.redirect(new URL("/admin/setup", request.url));
+  }
+
+  // Quem já trocou a senha não tem o que fazer no setup.
+  if (!sessao.pa && path === "/admin/setup") {
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ["/admin/:path*"],
 };

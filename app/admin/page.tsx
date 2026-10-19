@@ -3,6 +3,7 @@ import FiltroEventos from "./FiltroEventos";
 import BotaoExportar from "./BotaoExportar";
 import TabelaInscritos from "./TabelaInscritos"; // IMPORTAÇÃO NOVA
 import { revalidatePath } from "next/cache";
+import { exigirSessao } from "@/lib/auth";
 
 export const revalidate = 0;
 
@@ -30,6 +31,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   async function excluirInscricao(formData: FormData) {
     "use server";
+    await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.inscricao.delete({ where: { id } });
     revalidatePath("/admin");

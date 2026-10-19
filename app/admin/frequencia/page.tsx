@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import PainelAbasFrequencia from "./PainelAbasFrequencia";
+import { exigirSessao } from "@/lib/auth";
 
 export const revalidate = 0;
 
@@ -21,6 +22,7 @@ export default async function FrequenciaPage() {
   // 🔴 AÇÃO ATUALIZADA: Bloqueio inteligente de nomes duplicados ou parecidos
 async function cadastrarMembro(formData: FormData) {
     "use server";
+    await exigirSessao();
     const nome = formData.get("nome") as string;
     // 🔴 AGORA PEGAMOS TODOS OS GRUPOS MARCADOS E JUNTAMOS COM VÍRGULA
     const gruposArray = formData.getAll("grupo") as string[]; 
@@ -51,6 +53,7 @@ async function cadastrarMembro(formData: FormData) {
 
   async function cadastrarAtividade(formData: FormData) {
     "use server";
+    await exigirSessao();
     const nome = formData.get("nome") as string;
     const data = new Date(formData.get("data") as string);
     if (!nome) return;
@@ -61,6 +64,7 @@ async function cadastrarMembro(formData: FormData) {
   // 🔴 AÇÃO ATUALIZADA: Proteção blindada contra presenças duplicadas
   async function salvarChamada(atividadeId: string, listaMembrosPresentes: string[], listaMembrosFiltrados: string[]) {
     "use server";
+    await exigirSessao();
     if (!atividadeId) return;
 
     await prisma.presenca.deleteMany({
@@ -82,6 +86,7 @@ async function cadastrarMembro(formData: FormData) {
   // 🔴 NOVA AÇÃO: Excluir Membro
   async function excluirMembro(formData: FormData) {
     "use server";
+    await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.membro.delete({ where: { id } });
     revalidatePath("/admin/frequencia");
