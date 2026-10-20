@@ -1,0 +1,32 @@
+name: CI
+
+# Roda a cada push na main e a cada Pull Request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      # Valores falsos, só para o build compilar. Nenhum segredo real é usado aqui.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      SESSION_SECRET: segredo-falso-so-para-o-ci-0123456789abcdef
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Gera o client do Prisma (os tipos do banco) antes de checar o código.
+      - run: npx prisma generate
+
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

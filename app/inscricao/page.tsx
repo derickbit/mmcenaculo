@@ -2,27 +2,9 @@ import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import type { Evento } from "@prisma/client";
+import { getStatusReal } from "@/lib/eventos";
 
 export const revalidate = 0;
-
-// 🔴 FUNÇÃO INTELIGENTE DE STATUS
-function getStatusReal(evento: Evento) {
-  if (evento.status !== "AUTOMATICO") return evento.status;
-  
-  const agora = new Date();
-  const inicio = new Date(evento.dataInicio);
-  const abertura = evento.dataAbertura ? new Date(evento.dataAbertura) : inicio;
-  
-  const fim = new Date(inicio);
-  fim.setDate(inicio.getDate() + (evento.duracaoDias || 1));
-
-  if (agora < abertura) return "AGUARDANDO";
-  if (agora >= abertura && agora < inicio) return "ABERTO";
-  if (agora >= inicio && agora < fim) return "FECHADO";
-  
-  return "CONCLUIDO";
-}
 
 export default async function InscricaoPage({ searchParams }: { searchParams: Promise<{ e?: string, sucessoPre?: string }> }) {
   const params = await searchParams;

@@ -1,29 +1,9 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import type { Evento } from "@prisma/client";
+import { getStatusReal } from "@/lib/eventos";
 
 export const revalidate = 0;
-
-// 🔴 FUNÇÃO MÁGICA DE AUTOMAÇÃO
-function getStatusReal(evento: Evento) {
-  // Se a coordenação forçou um status manual (ABERTO, FECHADO, CONCLUIDO), ele obedece o manual.
-  if (evento.status !== "AUTOMATICO") return evento.status;
-
-  const agora = new Date();
-  const inicio = new Date(evento.dataInicio);
-  const abertura = evento.dataAbertura ? new Date(evento.dataAbertura) : inicio;
-  
-  // Calcula o dia que o evento acaba somando a duração
-  const fim = new Date(inicio);
-  fim.setDate(inicio.getDate() + (evento.duracaoDias || 1));
-
-  if (agora < abertura) return "AGUARDANDO"; // Antes da data de abrir inscrições
-  if (agora >= abertura && agora < inicio) return "ABERTO"; // Inscrições rolando
-  if (agora >= inicio && agora < fim) return "FECHADO"; // Evento acontecendo (Inscrições encerradas)
-  
-  return "CONCLUIDO"; // O evento já passou
-}
 
 export default async function CalendarioPage() {
   const eventos = await prisma.evento.findMany({
