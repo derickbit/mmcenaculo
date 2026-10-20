@@ -4,15 +4,18 @@ import { useState, useMemo } from "react";
 import ModalDetalhes from "./ModalDetalhes";
 import GerenciadorNotas from "./GerenciadorNotas";
 import BotaoDeletar from "./BotaoDeletar";
+import type { InscricaoAdmin } from "./tipos";
 
-export default function TabelaInscritos({ inscricoes, excluirInscricao }: { inscricoes: any[], excluirInscricao: (formData: FormData) => void }) {
+type Ordem = "RECENTES" | "ANTIGAS" | "A_Z" | "Z_A";
+
+export default function TabelaInscritos({ inscricoes, excluirInscricao }: { inscricoes: InscricaoAdmin[], excluirInscricao: (formData: FormData) => void }) {
   const [buscaNome, setBuscaNome] = useState("");
   const [filtroParoquia, setFiltroParoquia] = useState("");
   // 🔴 AGORA O PADRÃO É POR DATA MAIS RECENTE
-  const [ordem, setOrdem] = useState<"RECENTES" | "ANTIGAS" | "A_Z" | "Z_A">("RECENTES");
+  const [ordem, setOrdem] = useState<Ordem>("RECENTES");
 
   const paroquiasDisponiveis = useMemo(() => {
-    const lista = inscricoes.map((i) => i.paroquiaAtuante).filter((p) => p && p.trim() !== "");
+    const lista = inscricoes.map((i) => i.paroquiaAtuante).filter((p): p is string => !!p && p.trim() !== "");
     return Array.from(new Set(lista));
   }, [inscricoes]);
 
@@ -57,7 +60,7 @@ export default function TabelaInscritos({ inscricoes, excluirInscricao }: { insc
 
         <div>
           <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Ordenar por:</label>
-          <select value={ordem} onChange={(e) => setOrdem(e.target.value as any)} className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-cenaculo-gold bg-white outline-none font-semibold text-gray-700">
+          <select value={ordem} onChange={(e) => setOrdem(e.target.value as Ordem)} className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-cenaculo-gold bg-white outline-none font-semibold text-gray-700">
             <option value="RECENTES">Data: Mais Recentes</option>
             <option value="ANTIGAS">Data: Mais Antigas</option>
             <option value="A_Z">Nome: A → Z</option>

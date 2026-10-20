@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
-export default function GridGaleria({ fotos, eventoNome }: { fotos: any[]; eventoNome: string }) {
+export default function GridGaleria({ fotos, eventoNome }: { fotos: { id: string; url: string }[]; eventoNome: string }) {
   // Estado para guardar a URL da foto que o utilizador clicou para ver em ponto grande
   const [fotoAtiva, setFotoAtiva] = useState<string | null>(null);
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { InscricaoAdmin } from "./tipos";
 
-// Aceita qualquer dado (any) temporariamente para não termos que redeclarar todos os tipos do Prisma aqui
-export default function ModalDetalhes({ inscricao }: { inscricao: any }) {
+export default function ModalDetalhes({ inscricao }: { inscricao: InscricaoAdmin }) {
   const [aberto, setAberto] = useState(false);
 
   if (!aberto) {
@@ -64,7 +64,7 @@ export default function ModalDetalhes({ inscricao }: { inscricao: any }) {
             <div className="col-span-1 md:col-span-2 border-t border-gray-100 pt-4 bg-blue-50/50 rounded p-4">
               <p className="text-xs text-cenaculo-blue uppercase font-bold tracking-wider mb-2">Notas Internas (Auditoria)</p>
               <div className="space-y-2">
-                {inscricao.observacoes.map((obs: any) => (
+                {inscricao.observacoes.map(obs => (
                   <div key={obs.id} className="bg-white p-2 rounded border border-gray-200 text-sm">
                     <p className="text-gray-800">{obs.texto}</p>
                     <div className="text-[10px] text-gray-500 mt-1 uppercase font-semibold">

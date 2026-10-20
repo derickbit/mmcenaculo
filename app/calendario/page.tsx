@@ -1,11 +1,12 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
+import type { Evento } from "@prisma/client";
 
 export const revalidate = 0;
 
 // 🔴 FUNÇÃO MÁGICA DE AUTOMAÇÃO
-function getStatusReal(evento: any) {
+function getStatusReal(evento: Evento) {
   // Se a coordenação forçou um status manual (ABERTO, FECHADO, CONCLUIDO), ele obedece o manual.
   if (evento.status !== "AUTOMATICO") return evento.status;
 

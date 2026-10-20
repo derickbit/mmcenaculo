@@ -53,7 +53,7 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {preCadastros.map((pre : any) => (
+              {preCadastros.map(pre => (
                 <tr key={pre.id} className="hover:bg-gray-50 transition-colors">
                   
                   <td className="p-4">

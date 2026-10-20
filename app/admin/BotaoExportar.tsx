@@ -1,8 +1,9 @@
 "use client";
 
 import * as XLSX from "xlsx";
+import type { InscricaoAdmin } from "./tipos";
 
-export default function BotaoExportar({ inscricoes, nomeEvento }: { inscricoes: any[], nomeEvento: string }) {
+export default function BotaoExportar({ inscricoes, nomeEvento }: { inscricoes: InscricaoAdmin[], nomeEvento: string }) {
   
   const exportarPlanilha = () => {
     if (inscricoes.length === 0) {
@@ -13,7 +14,7 @@ export default function BotaoExportar({ inscricoes, nomeEvento }: { inscricoes: 
     const dadosFormatados = inscricoes.map(insc => {
       // 🔴 NOVA LÓGICA: Transforma o array de notas em um texto legível para o Excel
       const notasFormatadas = insc.observacoes && insc.observacoes.length > 0
-        ? insc.observacoes.map((obs: any) => 
+        ? insc.observacoes.map(obs => 
             `[${new Date(obs.criadoEm).toLocaleDateString('pt-BR')} por ${obs.admin.nome}]: ${obs.texto}`
           ).join(" | ") // Separa as notas por uma barra vertical
         : "-";

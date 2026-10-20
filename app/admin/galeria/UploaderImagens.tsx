@@ -1,6 +1,6 @@
 "use client";
 
-import { CldUploadWidget } from "next-cloudinary";
+import { CldUploadWidget, type CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { useRouter } from "next/navigation";
 
 export default function UploaderImagens({ 
@@ -24,10 +24,10 @@ export default function UploaderImagens({
         maxImageHeight: 1280,  // Mantém a proporção limitando a altura
         maxFileSize: 10000000, // Impede que tentem subir um arquivo maior que 10MB
       }}
-      onSuccess={(result: any) => {
+      onSuccess={(result: CloudinaryUploadWidgetResults) => {
         // Quando a foto termina de subir, salva a URL segura no banco de dados
-        const urlSegura = result.info.secure_url;
-        salvarNoBanco(eventoId, urlSegura);
+        if (typeof result.info !== "object") return;
+        salvarNoBanco(eventoId, result.info.secure_url);
       }}
       onQueuesEnd={() => {
         // Atualiza a página quando todas as fotos da fila terminarem
