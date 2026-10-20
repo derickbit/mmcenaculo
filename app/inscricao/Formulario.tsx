@@ -72,7 +72,7 @@ export default function Formulario({
       } else {
         alert(result.error || "Ops! Houve um erro ao salvar sua inscrição.");
       }
-    } catch (error) {
+    } catch {
       alert("Erro de conexão. Tente novamente.");
     } finally {
       setLoading(false);

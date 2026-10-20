@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CldUploadWidget } from "next-cloudinary";
+import { CldUploadWidget, type CloudinaryUploadWidgetResults } from "next-cloudinary";
 
 export default function FormNovoEvento({ criarEventoAction }: { criarEventoAction: (formData: FormData) => void }) {
   const [imagemCapa, setImagemCapa] = useState("");
@@ -55,7 +55,9 @@ export default function FormNovoEvento({ criarEventoAction }: { criarEventoActio
           <CldUploadWidget
             uploadPreset="cenaculo_preset"
             options={{ maxFiles: 1, clientAllowedFormats: ["png", "jpeg", "jpg", "webp"] }}
-            onSuccess={(result: any) => setImagemCapa(result.info.secure_url)}
+            onSuccess={(result: CloudinaryUploadWidgetResults) => {
+              if (typeof result.info === "object") setImagemCapa(result.info.secure_url);
+            }}
           >
             {({ open }) => (
               <div className="flex items-center gap-3">

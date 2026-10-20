@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import * as XLSX from 'xlsx';
 
 const GRUPOS_OFICIAIS = [
@@ -12,9 +12,13 @@ const GRUPOS_OFICIAIS = [
   "Gabaon"
 ];
 
+type Presenca = { id: string; atividadeId: string; atividade?: { nome: string } | null };
+type Membro = { id: string; nome: string; grupo: string; cenaculoFeito: string | null; presencas: Presenca[] };
+type Atividade = { id: string; nome: string; data: Date };
+
 type PainelProps = {
-  membros: any[];
-  atividades: any[];
+  membros: Membro[];
+  atividades: Atividade[];
   grupos: string[];
   cadastrarMembro: (formData: FormData) => Promise<{ erro?: string; sucesso?: boolean } | void>;
   cadastrarAtividade: (formData: FormData) => Promise<void>;
@@ -37,7 +41,8 @@ export default function PainelAbasFrequencia({
   const [atividadeSelecionada, setAtividadeSelecionada] = useState("");
   const [grupoSelecionado, setGrupoSelecionado] = useState("");
   const [buscaChamada, setBuscaChamada] = useState("");
-  const [presentes, setPresentes] = useState<Set<string>>(new Set());
+  // Marcações feitas na tela; valem só para a combinação atividade+grupo em que foram feitas.
+  const [edicao, setEdicao] = useState<{ chave: string; ids: Set<string> } | null>(null);
   const [salvando, setSalvando] = useState(false);
 
   // Estados: BUSCA DE ATIVIDADES
@@ -94,24 +99,24 @@ export default function PainelAbasFrequencia({
     });
   }, [atividades, buscaHistoricoAtividade]);
 
-  useEffect(() => {
-    if (!atividadeSelecionada || !grupoSelecionado) {
-      setPresentes(new Set());
-      return;
-    }
-    const presencasJaSalvas = new Set<string>();
+  const chaveChamada = `${atividadeSelecionada}|${grupoSelecionado}`;
+
+  const presencasJaSalvas = useMemo(() => {
+    const ids = new Set<string>();
+    if (!atividadeSelecionada || !grupoSelecionado) return ids;
     membrosDoGrupo.forEach(membro => {
-      const foiNaAtividade = membro.presencas.some((p: any) => p.atividadeId === atividadeSelecionada);
-      if (foiNaAtividade) presencasJaSalvas.add(membro.id);
+      if (membro.presencas.some(p => p.atividadeId === atividadeSelecionada)) ids.add(membro.id);
     });
-    setPresentes(presencasJaSalvas);
+    return ids;
   }, [atividadeSelecionada, grupoSelecionado, membrosDoGrupo]);
+
+  const presentes = edicao?.chave === chaveChamada ? edicao.ids : presencasJaSalvas;
 
   const alternarPresenca = (membroId: string) => {
     const novoSet = new Set(presentes);
     if (novoSet.has(membroId)) novoSet.delete(membroId);
     else novoSet.add(membroId);
-    setPresentes(novoSet);
+    setEdicao({ chave: chaveChamada, ids: novoSet });
   };
 
   const handleSalvarChamada = async () => {
@@ -119,6 +124,7 @@ export default function PainelAbasFrequencia({
     setSalvando(true);
     await salvarChamada(atividadeSelecionada, Array.from(presentes), membrosDoGrupo.map(m => m.id));
     setSalvando(false);
+    setEdicao(null);
     mostrarNotificacao("Lista de chamada salva com sucesso!");
   };
 
@@ -130,7 +136,7 @@ export default function PainelAbasFrequencia({
 
   const exportarExcel = () => {
     const dadosMapeados = membrosFiltradosParaRelatorio.map(m => {
-      const listaEventos = m.presencas.map((p: any) => p.atividade?.nome).filter(Boolean).join(", ");
+      const listaEventos = m.presencas.map(p => p.atividade?.nome).filter(Boolean).join(", ");
       return {
         "Nome": m.nome,
         "Grupo": m.grupo,
@@ -414,7 +420,7 @@ export default function PainelAbasFrequencia({
                           <td className="p-4 text-sm text-gray-600">{m.cenaculoFeito ? `${m.cenaculoFeito}º` : "-"}</td>
                           <td className="p-4 text-sm max-w-xs md:max-w-md">
                             <div className="flex flex-wrap gap-1.5">
-                              {m.presencas.map((p: any) => <span key={p.id} className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">{p.atividade?.nome}</span>)}
+                              {m.presencas.map(p => <span key={p.id} className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">{p.atividade?.nome}</span>)}
                               {m.presencas.length === 0 && <span className="text-gray-400 italic text-xs">Nenhum evento registrado</span>}
                             </div>
                           </td>

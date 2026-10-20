@@ -2,11 +2,12 @@ import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Evento } from "@prisma/client";
 
 export const revalidate = 0;
 
 // 🔴 FUNÇÃO INTELIGENTE DE STATUS
-function getStatusReal(evento: any) {
+function getStatusReal(evento: Evento) {
   if (evento.status !== "AUTOMATICO") return evento.status;
   
   const agora = new Date();

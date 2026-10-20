@@ -39,7 +39,7 @@ if (response.ok) {
         const data = await response.json();
         setErro(data.error || "Erro de credenciais.");
       }
-    } catch (error) {
+    } catch {
       setErro("Erro de conexão com o servidor.");
     } finally {
       setLoading(false);
