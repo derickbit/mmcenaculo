@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cenáculo — Plataforma de gestão de eventos
 
-## Getting Started
+Plataforma web desenvolvida para o **Movimento Mariano Cenáculo**, para substituir o controle de inscrições feito com Wix e Google Forms. Reúne a página pública de divulgação e inscrição e um painel administrativo para a coordenação.
 
-First, run the development server:
+- **Site:** https://mmcenaculo.vercel.app
+- **Status:** pronta e publicada; ainda sem uso real, previsto para o próximo evento.
+
+## Funcionalidades
+
+**Área pública**
+- Calendário de eventos com status calculado automaticamente (aguardando, aberto, fechado, concluído).
+- Inscrição online com dados do participante, saúde, restrições e atendimento especial.
+- Lista de espera (pré-cadastro) quando as vagas não estão abertas.
+- Galeria de fotos por evento e página institucional.
+
+**Painel administrativo** (`/admin`, protegido por login)
+- Inscritos: filtro por evento, detalhes, notas internas e exclusão.
+- Exportação das inscrições para Excel (`.xlsx`).
+- Eventos: criação com imagem de capa, duração de 1 a 3 dias, abertura automática de vagas e status manual.
+- Lista de espera dos pré-cadastros.
+- Frequência: cadastro de membros e atividades e registro de presença (chamada), sem duplicar a presença da mesma pessoa.
+- Galeria: envio de fotos pelo navegador.
+
+## Stack
+
+| Camada | Tecnologias |
+|---|---|
+| Aplicação | Next.js 16 (App Router, Server Actions), React 19, TypeScript |
+| Estilo | Tailwind CSS 4 |
+| Banco de dados | PostgreSQL (Supabase em produção, Docker local) com Prisma 7 |
+| Imagens | Cloudinary |
+| Planilhas | SheetJS (`xlsx`) |
+| Deploy | Vercel |
+
+## Segurança do painel
+
+- Sessão em cookie `httpOnly`, assinado com HMAC-SHA256 e com validade de 8 horas.
+- Middleware valida a assinatura em todas as rotas `/admin`, e as Server Actions conferem a sessão novamente.
+- Senhas guardadas com bcrypt. O primeiro acesso usa uma senha provisória e obriga a troca antes de qualquer outra tela.
+- Login com mensagem de erro genérica, para não revelar quais usuários existem.
+
+## Modelo de dados
+
+`Evento`, `Inscricao`, `Observacao`, `PreCadastro`, `Foto`, `Usuario`, `Membro`, `Atividade` e `Presenca`. O esquema está em [`prisma/schema.prisma`](prisma/schema.prisma).
+
+## Como rodar localmente
+
+Pré-requisitos: Node.js 20+ e Docker.
 
 ```bash
+git clone https://github.com/derickbit/mmcenaculo.git
+cd mmcenaculo
+npm install
+docker compose up -d          # PostgreSQL local
+cp .env.example .env          # preencha as variáveis
+npx prisma db push            # cria as tabelas
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variáveis de ambiente (veja `.env.example`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variável | Uso |
+|---|---|
+| `DATABASE_URL` | Conexão com o PostgreSQL |
+| `SESSION_SECRET` | Assinatura da sessão do admin (mínimo 32 caracteres) |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Envio de imagens (preset `cenaculo_preset`) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O primeiro administrador é criado direto no banco, na tabela `Usuario`, com `primeiroAcesso = true`. No primeiro login a pessoa define a própria senha.
 
-## Learn More
+## Autor
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Dérick Bitencourte da Silva** · [GitHub](https://github.com/derickbit) · [LinkedIn](https://www.linkedin.com/in/derick-bitencourte-da-silva/)
