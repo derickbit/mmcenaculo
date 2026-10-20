@@ -68,7 +68,7 @@ export default function ModalDetalhes({ inscricao }: { inscricao: InscricaoAdmin
                   <div key={obs.id} className="bg-white p-2 rounded border border-gray-200 text-sm">
                     <p className="text-gray-800">{obs.texto}</p>
                     <div className="text-[10px] text-gray-500 mt-1 uppercase font-semibold">
-                      Por {obs.admin.nome} em {new Date(obs.criadoEm).toLocaleDateString('pt-BR')} às {new Date(obs.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      Por {obs.usuario.nome} em {new Date(obs.criadoEm).toLocaleDateString('pt-BR')} às {new Date(obs.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 ))}

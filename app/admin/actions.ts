@@ -10,14 +10,15 @@ export async function adicionarNota(inscricaoId: string, formData: FormData) {
 
   // Exige sessão assinada e válida; o autor da nota vem da sessão, não de um cookie forjável.
   const sessao = await exigirSessao();
-  const adminId = sessao.sub;
+  const usuario = await prisma.usuario.findUnique({ where: { nome: sessao.sub }, select: { id: true } });
+  if (!usuario) throw new Error("Não autorizado");
 
   // Cria a nota na Trilha de Auditoria
   await prisma.observacao.create({
     data: {
       texto,
       inscricaoId,
-      adminId
+      usuarioId: usuario.id
     }
   });
 
