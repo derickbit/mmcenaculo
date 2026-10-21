@@ -20,11 +20,13 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
   let kidsId: string; // evento Kids aberto
   const eventosCriados: string[] = [];
 
-  const enviar = (corpo: unknown) =>
+  // Cada envio vem de um IP diferente (para não esbarrar no limite de tentativas), a não ser que o teste escolha um.
+  let ipN = 0;
+  const enviar = (corpo: unknown, ip = `ip-${sufixo}-${++ipN}`) =>
     POST(
       new Request("http://localhost/api/inscricao", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
         body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
       })
     );
@@ -74,6 +76,7 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
   afterAll(async () => {
     // Apagar o evento leva junto as inscrições (cascata).
     await prisma.evento.deleteMany({ where: { id: { in: eventosCriados } } });
+    await prisma.limiteTentativa.deleteMany({ where: { chave: { startsWith: `inscricao:ip-${sufixo}-` } } });
     await prisma.$disconnect();
   });
 
@@ -181,6 +184,28 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
         crianca({ criancaNome: "Pequeno", criancaNascimento: `${new Date().getUTCFullYear() - 5}-03-10` })
       );
       expect(resposta.status).toBe(201);
+    });
+  });
+
+  describe("limite de tentativas", () => {
+    it("a 11ª tentativa do mesmo IP é recusada (429) sem gravar nada; outro IP continua liberado", async () => {
+      const ip = `ip-${sufixo}-limite`;
+      for (let i = 0; i < 10; i++) expect((await enviar(adulto(abertoId), ip)).status).toBe(201);
+
+      const entrada = adulto(abertoId);
+      const recusada = await enviar(entrada, ip);
+      expect(recusada.status).toBe(429);
+      expect(Number(recusada.headers.get("Retry-After"))).toBeGreaterThan(0);
+      expect((await recusada.json()).error).toMatch(/Muitas tentativas/);
+      expect(await prisma.inscricao.count({ where: { email: entrada.email } })).toBe(0);
+
+      expect((await enviar(entrada, `ip-${sufixo}-outro`)).status).toBe(201);
+    });
+
+    it("envios inválidos também contam para o limite", async () => {
+      const ip = `ip-${sufixo}-invalidos`;
+      for (let i = 0; i < 10; i++) expect((await enviar(adulto(abertoId, { email: "ruim" }), ip)).status).toBe(400);
+      expect((await enviar(adulto(abertoId), ip)).status).toBe(429);
     });
   });
 });

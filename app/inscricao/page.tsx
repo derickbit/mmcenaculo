@@ -12,6 +12,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
   const eventoEscolhidoId = params.e;
   const exibiuSucessoPre = params.sucessoPre === "true";
   const exibiuErroPre = params.erroPre === "1";
+  const exibiuLimitePre = params.erroPre === "limite";
 
   // 1. Busca TODOS os eventos para podermos aplicar a lógica de data inteligente
   const todosEventos = await prisma.evento.findMany({
@@ -68,6 +69,11 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
                 </p>
               </div>
 
+              {exibiuLimitePre && (
+                <div role="alert" className="mb-4 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
+                  Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.
+                </div>
+              )}
               {exibiuErroPre && (
                 <div role="alert" className="mb-4 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
                   Não foi possível registrar seu interesse. Confira o nome, o e-mail e o telefone (com DDD) e tente de novo.

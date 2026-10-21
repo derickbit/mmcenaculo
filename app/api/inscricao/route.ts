@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getStatusReal } from "@/lib/eventos";
 import { inscricaoAdultoSchema, inscricaoKidsSchema, validar } from "@/lib/inscricao";
+import { LIMITES, limitar, mensagemLimite } from "@/lib/limite";
+import { ipDoCliente } from "@/lib/ip";
 
 const erro = (status: number, mensagem: string, extra?: Record<string, unknown>) =>
   NextResponse.json({ error: mensagem, ...extra }, { status });
@@ -22,6 +24,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Limite de tentativas por IP (cada envio conta, certo ou errado)
+    const limite = await limitar(`inscricao:${ipDoCliente(request.headers)}`, LIMITES.inscricao.maximo, LIMITES.inscricao.janelaSegundos);
+    if (!limite.permitido) {
+      return NextResponse.json(
+        { error: mensagemLimite(limite.tentarEmSegundos) },
+        { status: 429, headers: { "Retry-After": String(limite.tentarEmSegundos) } }
+      );
+    }
+
     // 2. O evento precisa existir
     const evento = await prisma.evento.findUnique({ where: { id: eventoId } });
     if (!evento) return erro(404, "Evento não encontrado.");

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from "vitest";
 import type { PrismaClient } from "@prisma/client";
 
 // Estes testes usam um banco de verdade (DATABASE_URL_TESTE). Sem a variável, são pulados.
@@ -8,6 +8,12 @@ if (urlTeste && !new URL(urlTeste).pathname.slice(1).endsWith("_test")) {
   // Trava de segurança: nunca rodar testes em um banco que não seja de testes.
   throw new Error("DATABASE_URL_TESTE precisa apontar para um banco cujo nome termina em _test.");
 }
+
+// A ação lê o IP dos cabeçalhos da requisição; no teste, escolhemos o IP de cada caso.
+const { origem } = vi.hoisted(() => ({ origem: { ip: "" } }));
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-forwarded-for": origem.ip }),
+}));
 
 // O redirect do Next lança uma exceção especial; aqui lançamos um erro simples com o destino, para o teste ler.
 vi.mock("next/navigation", () => ({
@@ -37,6 +43,12 @@ describe.skipIf(!urlTeste)("salvarPreCadastro (banco de testes)", () => {
 
   const quantos = (email: string) => prisma.preCadastro.count({ where: { email } });
 
+  // Cada teste vem de um IP diferente, para não esbarrar no limite de tentativas.
+  let ipN = 0;
+  beforeEach(() => {
+    origem.ip = `ip-${sufixo}-${++ipN}`;
+  });
+
   beforeAll(async () => {
     // O lib/prisma lê DATABASE_URL ao ser importado, então apontamos para o banco de testes antes.
     process.env.DATABASE_URL = urlTeste;
@@ -46,6 +58,7 @@ describe.skipIf(!urlTeste)("salvarPreCadastro (banco de testes)", () => {
 
   afterAll(async () => {
     await prisma.preCadastro.deleteMany({ where: { email: { endsWith: `${sufixo}@teste.com` } } });
+    await prisma.limiteTentativa.deleteMany({ where: { chave: { startsWith: `precadastro:ip-${sufixo}-` } } });
     await prisma.$disconnect();
   });
 
@@ -81,5 +94,18 @@ describe.skipIf(!urlTeste)("salvarPreCadastro (banco de testes)", () => {
       await expect(salvarPreCadastro(form(caso))).rejects.toThrow("REDIRECT:/inscricao?erroPre=1");
       expect(await quantos(caso.email)).toBe(0);
     }
+  });
+
+  it("a 6ª tentativa do mesmo IP é recusada e não grava nada, mesmo com dados válidos", async () => {
+    origem.ip = `ip-${sufixo}-limite`;
+    for (let i = 0; i < 5; i++) {
+      await expect(salvarPreCadastro(form(lista({ email: `limite${i}.${sufixo}@teste.com` })))).rejects.toThrow("sucessoPre");
+    }
+    const sexta = lista({ email: `limite5.${sufixo}@teste.com` });
+    await expect(salvarPreCadastro(form(sexta))).rejects.toThrow("REDIRECT:/inscricao?erroPre=limite");
+    expect(await quantos(sexta.email)).toBe(0);
+
+    origem.ip = `ip-${sufixo}-outro`; // outro IP não é afetado
+    await expect(salvarPreCadastro(form(sexta))).rejects.toThrow("sucessoPre");
   });
 });

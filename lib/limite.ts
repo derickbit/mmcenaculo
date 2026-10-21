@@ -6,6 +6,18 @@ import prisma from "@/lib/prisma";
 
 export type ResultadoLimite = { permitido: boolean; tentarEmSegundos: number };
 
+// Limites de cada ação (valores combinados; generosos de propósito, pois muita gente pode se inscrever do mesmo Wi-Fi).
+export const LIMITES = {
+  inscricao: { maximo: 10, janelaSegundos: 10 * 60 }, // por IP
+  preCadastro: { maximo: 5, janelaSegundos: 10 * 60 }, // por IP
+  loginFalhas: { maximo: 5, janelaSegundos: 15 * 60 }, // erros de senha, por IP e por usuário
+} as const;
+
+export function mensagemLimite(tentarEmSegundos: number): string {
+  const minutos = Math.max(1, Math.ceil(tentarEmSegundos / 60));
+  return `Muitas tentativas. Tente novamente em ${minutos} ${minutos === 1 ? "minuto" : "minutos"}.`;
+}
+
 const UMA_CHANCE_EM_100 = 0.01;
 
 // Soma 1 na chave (ou recomeça em 1 se a janela venceu), numa única operação atômica:
