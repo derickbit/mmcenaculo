@@ -2,31 +2,16 @@ import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
 import FormularioKids from "./FormularioKids";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { salvarPreCadastro } from "./actions";
 import { getStatusReal } from "@/lib/eventos";
 
 export const revalidate = 0;
 
-export default async function InscricaoPage({ searchParams }: { searchParams: Promise<{ e?: string, sucessoPre?: string }> }) {
+export default async function InscricaoPage({ searchParams }: { searchParams: Promise<{ e?: string, sucessoPre?: string, erroPre?: string }> }) {
   const params = await searchParams;
   const eventoEscolhidoId = params.e;
   const exibiuSucessoPre = params.sucessoPre === "true";
-
-  async function salvarPreCadastro(formData: FormData) {
-    "use server";
-    const nome = formData.get("nome") as string;
-    const email = formData.get("email") as string;
-    const telefone = formData.get("telefone") as string;
-    const tipo = formData.get("tipo") as string;
-
-    if (!nome || !email || !telefone) return;
-
-    await prisma.preCadastro.create({
-      data: { nome, email, telefone, tipo }
-    });
-
-    redirect("/inscricao?sucessoPre=true");
-  }
+  const exibiuErroPre = params.erroPre === "1";
 
   // 1. Busca TODOS os eventos para podermos aplicar a lógica de data inteligente
   const todosEventos = await prisma.evento.findMany({
@@ -83,6 +68,12 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
                 </p>
               </div>
 
+              {exibiuErroPre && (
+                <div role="alert" className="mb-4 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
+                  Não foi possível registrar seu interesse. Confira o nome, o e-mail e o telefone (com DDD) e tente de novo.
+                </div>
+              )}
+
               <form action={salvarPreCadastro} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Qual retiro você tem interesse?</label>
@@ -102,7 +93,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Telefone (WhatsApp)</label>
-                  <input type="text" name="telefone" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none" />
+                  <input type="text" name="telefone" required inputMode="tel" maxLength={20} placeholder="(00) 00000-0000" className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none" />
                 </div>
                 <button type="submit" className="w-full bg-cenaculo-blue text-white font-bold py-3.5 rounded-md hover:bg-[#1a1d7a] transition shadow-md mt-2">
                   Quero ser Avisado!

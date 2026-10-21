@@ -43,8 +43,14 @@ const email = (rotulo: string) =>
     .transform((s) => s.trim().toLowerCase())
     .pipe(z.email(`${rotulo} inválido.`).max(254, `${rotulo}: máximo de 254 caracteres.`));
 
+// 10 ou 11 dígitos (DDD + número); aceita o código do país (55) na frente.
+const digitosDoTelefone = (t: string) => {
+  const d = t.replace(/\D/g, "");
+  return d.length >= 12 && d.startsWith("55") ? d.slice(2) : d;
+};
+
 const telefone = (rotulo: string) =>
-  obrigatorio(rotulo, 20).refine((t) => [10, 11].includes(t.replace(/\D/g, "").length), `${rotulo} inválido. Use DDD + número.`);
+  obrigatorio(rotulo, 20).refine((t) => [10, 11].includes(digitosDoTelefone(t).length), `${rotulo} inválido. Use DDD + número.`);
 
 const dataNascimento = (rotulo: string) =>
   z
@@ -106,6 +112,17 @@ export const inscricaoKidsSchema = z
   })
   // Quem prefere falar com a equipe não registra o texto de saúde.
   .transform((d) => ({ ...d, saudeObservacao: d.saudeComEquipe ? undefined : d.saudeObservacao }));
+
+// ---------- lista de espera (pré-cadastro) ----------
+
+export const TIPOS_PRE_CADASTRO = ["CENACULO", "KIDS", "CENACULAO"] as const;
+
+export const preCadastroSchema = z.object({
+  nome: obrigatorio("Nome", 120),
+  email: email("E-mail"),
+  telefone: telefone("Telefone"),
+  tipo: z.enum(TIPOS_PRE_CADASTRO, { error: "Selecione o retiro." }),
+});
 
 // ---------- resultado ----------
 
