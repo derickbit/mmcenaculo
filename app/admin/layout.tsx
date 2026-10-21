@@ -32,6 +32,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin" className={`block p-3 rounded-lg transition-colors ${pathname === '/admin' ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Inscrições
           </Link>
+          <Link href="/admin/kids" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/kids') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+            Inscrições Kids
+          </Link>
           <Link href="/admin/espera" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/espera') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Lista de Espera
           </Link>

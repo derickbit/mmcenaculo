@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
+import FormularioKids from "./FormularioKids";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStatusReal } from "@/lib/eventos";
@@ -132,11 +133,19 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
   if (eventoParaFormulario) {
     return (
       <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12">
-        <Formulario 
-          eventoId={eventoParaFormulario.id} 
-          eventoNome={eventoParaFormulario.nome} 
-          eventoTipo={eventoParaFormulario.tipo} 
-        />
+        {eventoParaFormulario.tipo === "KIDS" ? (
+          <FormularioKids
+            eventoId={eventoParaFormulario.id}
+            eventoNome={eventoParaFormulario.nome}
+            dataInicioEvento={eventoParaFormulario.dataInicio.toISOString()}
+          />
+        ) : (
+          <Formulario 
+            eventoId={eventoParaFormulario.id} 
+            eventoNome={eventoParaFormulario.nome} 
+            eventoTipo={eventoParaFormulario.tipo} 
+          />
+        )}
       </main>
     );
   }

@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  2 passed (2)
-      Tests  25 passed (25)
+ Test Files  4 passed (4)
+      Tests  68 passed (68)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -50,17 +50,44 @@ Testa a função `getStatusReal` (`lib/eventos.ts`), que decide se um evento est
 - A função recebe a hora atual como parâmetro opcional (`agora`). Os testes usam isso para "congelar"
   o relógio e não dependerem do dia em que são executados.
 
-### 2. Notas internas: `app/admin/actions.test.ts` (3 testes)
+### 2. Painel de admin: `app/admin/actions.test.ts` (7 testes)
 
 Testa a ação `adicionarNota` (`app/admin/actions.ts`), usada no painel para registrar uma observação sobre uma inscrição.
 
 - **Grava a nota com o usuário logado e lista com o nome do autor.** A nota deve ficar ligada ao `id` do usuário da sessão e, ao listar, o nome dele deve aparecer.
 - **Recusa e não grava nada se o usuário da sessão não existe.**
 - **Texto vazio não cria nota.**
+- **Notas e exclusão no Kids:** a nota de uma criança fica ligada só à inscrição Kids (nunca também a uma de adulto). Excluir uma
+  inscrição Kids apaga também as notas dela, sem tocar nas outras.
+- **Sem login, nada acontece:** sem sessão, as ações do painel recusam e não gravam nem apagam nada.
 
 Este teste usa um **banco de dados de verdade**. O motivo: o bug que ele protege (a nota apontava para uma tabela
 errada) era uma regra do banco (chave estrangeira), e só um banco real reproduz isso. Foi confirmado que o teste
 falha se esse bug voltar.
+
+### 3. Regras de entrada das inscrições: `lib/inscricao.test.ts` (25 testes, sem banco)
+
+Testam os schemas de `lib/inscricao.ts` (feitos com a biblioteca `zod`), que decidem o que a API aceita.
+
+- **Adulto:** campos obrigatórios, e-mail normalizado (minúsculas, sem espaços), telefone com 10 ou 11 dígitos, tamanho máximo dos
+  textos, data inválida (`2020-02-31`, futuro, antes de 1900) vira mensagem de erro e não erro 500. Campos desconhecidos são ignorados.
+- **Kids:** só os campos combinados são aceitos; **qualquer campo extra é rejeitado** (assim nada além do mínimo da criança entra).
+  Só o primeiro nome da criança, parentesco de uma lista fechada, consentimento do responsável obrigatório.
+  Se o responsável marca "prefiro falar com a equipe", o texto de saúde é descartado.
+- **Faixa de 8 a 10 anos:** a criança fora da faixa é aceita (podem existir exceções), e `foraDaFaixaKids` calcula o aviso para a
+  equipe usando a idade **na data do evento**.
+
+### 4. API de inscrição: `app/api/inscricao/route.test.ts` (14 testes, com banco)
+
+Chamam a rota `POST /api/inscricao` de verdade, contra o banco de testes.
+
+- **O servidor confere se o evento está aberto** (evento fechado responde 403 e não grava nada; evento inexistente, 404).
+- **Resposta sem dados:** o sucesso devolve só uma mensagem, nunca os dados da inscrição nem de saúde.
+- **Duplicidade garantida pelo banco:** adulto por e-mail (mesmo com letras maiúsculas diferentes); Kids por evento + e-mail do
+  responsável + nome + nascimento da criança. Irmãos podem se inscrever; a mesma criança, não. O aviso é genérico e **não confirma**
+  que um e-mail ou uma criança já está inscrita.
+- **Kids:** campo extra, falta de consentimento ou cadastro de adulto em evento Kids são recusados (400) e nada é gravado.
+  O momento do aceite é registrado pelo servidor.
 
 ## O banco de testes
 
@@ -95,13 +122,18 @@ Se alguma tabela mudar no `prisma/schema.prisma`, rode o `db push` de novo tamb�
 - Se o nome do banco **não terminar em `_test`**, o teste se recusa a rodar. Isso impede de apontar, sem querer, para o banco real.
 - Cada teste cria os próprios dados e apaga tudo no final. O banco de testes fica vazio entre as execuções.
 
-## Como o teste de notas funciona (por dentro)
+## Como os testes de banco funcionam (por dentro)
 
-1. Troca a parte do Next.js que só existe dentro do servidor (a leitura da sessão e o `revalidatePath`) por versões simples ("mocks").
-2. Aponta o Prisma para o banco de testes.
-3. Cria um usuário, um evento e uma inscrição de teste.
-4. Chama `adicionarNota` como se fosse o painel e consulta o banco para ver o resultado.
-5. Apaga tudo no final.
+Os dois arquivos de teste com banco (`actions.test.ts` e `route.test.ts`) seguem o mesmo roteiro:
+
+1. Apontam o Prisma para o banco de testes (a variável `DATABASE_URL_TESTE`).
+2. Criam os dados de que precisam: eventos, um usuário, inscrições. Cada execução usa nomes e e-mails únicos.
+3. Chamam o código de verdade, sem servidor:
+   - **Notas:** a ação `adicionarNota`. A parte do Next.js que só existe no servidor (a leitura da sessão e o `revalidatePath`)
+     é trocada por versões simples ("mocks").
+   - **Inscrição:** a função `POST` da rota, com um `Request` montado no teste.
+4. Consultam o banco para ver se o resultado é o esperado (o que foi gravado, e o que **não** foi).
+5. Apagam tudo no final. Apagar o evento leva junto as inscrições (cascata).
 
 ## Verificação automática no GitHub (CI)
 
@@ -110,7 +142,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 25 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 68 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo

@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 
 type EventoResumo = { id: string; nome: string; status: string; };
 
-export default function FiltroEventos({ eventos, eventoSelecionadoId }: { eventos: EventoResumo[], eventoSelecionadoId: string }) {
+export default function FiltroEventos({ eventos, eventoSelecionadoId, rota = "/admin" }: { eventos: EventoResumo[], eventoSelecionadoId: string, rota?: string }) {
   const router = useRouter();
 
   return (
     <select 
       value={eventoSelecionadoId} 
-      onChange={(e) => router.push(`/admin?eventoId=${e.target.value}`)} 
+      onChange={(e) => router.push(`${rota}?eventoId=${e.target.value}`)} 
       className="p-2 border border-gray-300 rounded focus:ring-cenaculo-gold bg-gray-50 outline-none w-full md:w-auto"
     >
       <option value="">Todos os Eventos</option>

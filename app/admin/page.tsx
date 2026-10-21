@@ -11,6 +11,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const resolvedParams = await searchParams;
 
   const eventos = await prisma.evento.findMany({
+    where: { tipo: { not: "KIDS" } }, // Kids tem página própria: /admin/kids
     orderBy: { criadoEm: 'desc' }
   });
 
