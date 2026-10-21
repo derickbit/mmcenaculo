@@ -20,7 +20,7 @@ Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultad
 
 ```
  Test Files  4 passed (4)
-      Tests  64 passed (64)
+      Tests  68 passed (68)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -50,13 +50,16 @@ Testa a função `getStatusReal` (`lib/eventos.ts`), que decide se um evento est
 - A função recebe a hora atual como parâmetro opcional (`agora`). Os testes usam isso para "congelar"
   o relógio e não dependerem do dia em que são executados.
 
-### 2. Notas internas: `app/admin/actions.test.ts` (3 testes)
+### 2. Painel de admin: `app/admin/actions.test.ts` (7 testes)
 
 Testa a ação `adicionarNota` (`app/admin/actions.ts`), usada no painel para registrar uma observação sobre uma inscrição.
 
 - **Grava a nota com o usuário logado e lista com o nome do autor.** A nota deve ficar ligada ao `id` do usuário da sessão e, ao listar, o nome dele deve aparecer.
 - **Recusa e não grava nada se o usuário da sessão não existe.**
 - **Texto vazio não cria nota.**
+- **Notas e exclusão no Kids:** a nota de uma criança fica ligada só à inscrição Kids (nunca também a uma de adulto). Excluir uma
+  inscrição Kids apaga também as notas dela, sem tocar nas outras.
+- **Sem login, nada acontece:** sem sessão, as ações do painel recusam e não gravam nem apagam nada.
 
 Este teste usa um **banco de dados de verdade**. O motivo: o bug que ele protege (a nota apontava para uma tabela
 errada) era uma regra do banco (chave estrangeira), e só um banco real reproduz isso. Foi confirmado que o teste
@@ -139,7 +142,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 64 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 68 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
