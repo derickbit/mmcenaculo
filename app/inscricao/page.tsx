@@ -1,19 +1,15 @@
 import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
 import FormularioKids from "./FormularioKids";
-import CamposAntiRobo from "./CamposAntiRobo";
+import ListaEspera from "./ListaEspera";
 import Link from "next/link";
-import { salvarPreCadastro } from "./actions";
 import { getStatusReal } from "@/lib/eventos";
 
 export const revalidate = 0;
 
-export default async function InscricaoPage({ searchParams }: { searchParams: Promise<{ e?: string, sucessoPre?: string, erroPre?: string }> }) {
+export default async function InscricaoPage({ searchParams }: { searchParams: Promise<{ e?: string }> }) {
   const params = await searchParams;
   const eventoEscolhidoId = params.e;
-  const exibiuSucessoPre = params.sucessoPre === "true";
-  const exibiuErroPre = params.erroPre === "1";
-  const exibiuLimitePre = params.erroPre === "limite";
 
   // 1. Busca TODOS os eventos para podermos aplicar a lógica de data inteligente
   const todosEventos = await prisma.evento.findMany({
@@ -49,71 +45,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
       <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12 flex items-center justify-center">
         <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-2xl shadow-xl border-t-8 border-cenaculo-gold">
           
-          {exibiuSucessoPre ? (
-            <div className="text-center py-6">
-              <h2 className="text-3xl font-extrabold text-cenaculo-blue mb-4">Interesse Registrado!</h2>
-              <p className="text-gray-600 mb-8">
-                Obrigado! Entraremos em contato por e-mail ou WhatsApp assim que abrirmos as vagas para o próximo retiro.
-              </p>
-              <Link href="/" className="bg-cenaculo-blue text-white font-bold py-3 px-8 rounded-full hover:bg-[#1a1d7a] transition">
-                Voltar ao Início
-              </Link>
-            </div>
-          ) : (
-            <>
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-extrabold text-gray-800">
-                  Próximos <span className="text-cenaculo-blue">Retiros</span>
-                </h2>
-                <p className="text-gray-600 mt-3 text-sm md:text-base">
-                  No momento as inscrições oficiais estão fechadas. Deixe seu contato abaixo na nossa <strong>Lista de Espera</strong> para ser avisado em primeira mão assim que abrirmos as próximas inscrições!
-                </p>
-              </div>
-
-              {exibiuLimitePre && (
-                <div role="alert" className="mb-4 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
-                  Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.
-                </div>
-              )}
-              {exibiuErroPre && (
-                <div role="alert" className="mb-4 p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
-                  Não foi possível registrar seu interesse. Confira o nome, o e-mail e o telefone (com DDD) e tente de novo.
-                </div>
-              )}
-
-              <form action={salvarPreCadastro} className="space-y-4">
-                <CamposAntiRobo />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Qual retiro você tem interesse?</label>
-                  <select name="tipo" className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none bg-white">
-                    <option value="CENACULO">Cenáculo (Tradicional)</option>
-                    <option value="KIDS">Cenáculo Kids</option>
-                    <option value="CENACULAO">Cenaculão</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
-                  <input type="text" name="nome" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">E-mail</label>
-                  <input type="email" name="email" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Telefone (WhatsApp)</label>
-                  <input type="text" name="telefone" required inputMode="tel" maxLength={20} placeholder="(00) 00000-0000" className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none" />
-                </div>
-                <button type="submit" className="w-full bg-cenaculo-blue text-white font-bold py-3.5 rounded-md hover:bg-[#1a1d7a] transition shadow-md mt-2">
-                  Quero ser Avisado!
-                </button>
-              </form>
-              
-              <div className="text-center mt-6">
-                <Link href="/" className="text-xs text-gray-400 hover:text-cenaculo-gold transition">Voltar para a página inicial</Link>
-              </div>
-            </>
-          )}
-
+          <ListaEspera />
         </div>
       </main>
     );
@@ -132,6 +64,13 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
   if (eventoParaFormulario) {
     return (
       <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12">
+        {eventosAbertos.length > 1 && (
+          <div className={`mx-auto mb-4 ${eventoParaFormulario.tipo === "KIDS" ? "max-w-3xl" : "max-w-5xl"}`}>
+            <Link href="/inscricao" className="text-sm font-semibold text-cenaculo-blue hover:text-cenaculo-gold transition">
+              ← Escolher outro evento
+            </Link>
+          </div>
+        )}
         {eventoParaFormulario.tipo === "KIDS" ? (
           <FormularioKids
             eventoId={eventoParaFormulario.id}

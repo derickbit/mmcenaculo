@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import CamposAntiRobo from "./CamposAntiRobo";
+import { CampoIsca, useAberturaDoFormulario } from "./antiRobo";
+import { mascararTelefone, telefoneValido } from "@/lib/telefone";
 import { FAIXA_KIDS, PARENTESCOS, PARENTESCO_ROTULOS, TEXTO_CONSENTIMENTO, foraDaFaixaKids } from "@/lib/kids";
 
 const campo = "mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none";
@@ -24,13 +25,11 @@ export default function FormularioKids({
   const [telefone, setTelefone] = useState("");
   const [saudeComEquipe, setSaudeComEquipe] = useState(false);
   const [consentimento, setConsentimento] = useState(false);
+  const abertura = useAberturaDoFormulario();
 
   const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 11) value = value.slice(0, 11);
-    if (value.length > 2) value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
-    if (value.length > 10) value = `${value.slice(0, 10)}-${value.slice(10)}`;
-    setTelefone(value);
+    setTelefone(mascararTelefone(e.target.value));
+    setErros((atual) => ({ ...atual, responsavelTelefone: "" }));
   };
 
   const handleDate = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,11 +54,13 @@ export default function FormularioKids({
     setErros({});
     setMensagem("");
 
+    // Confere antes de enviar o que dá para conferir: a pessoa corrige só o campo errado.
+    const novosErros: Record<string, string> = {};
     const partes = nascimento.split("/");
-    if (partes.length !== 3 || partes[2].length !== 4) {
-      setErros({ criancaNascimento: "Informe a data no formato DD/MM/AAAA." });
-      return;
-    }
+    if (partes.length !== 3 || partes[2].length !== 4) novosErros.criancaNascimento = "Informe a data no formato DD/MM/AAAA.";
+    if (!telefoneValido(telefone)) novosErros.responsavelTelefone = "Telefone inválido. Use DDD + número.";
+    setErros(novosErros);
+    if (Object.keys(novosErros).length > 0) return;
 
     const form = new FormData(event.currentTarget);
     const texto = (nome: string) => String(form.get(nome) ?? "");
@@ -77,7 +78,7 @@ export default function FormularioKids({
       parentesco: texto("parentesco"),
       consentimento,
       website: texto("website"),
-      abertoEm: texto("abertoEm"),
+      abertoEm: String(abertura.current), // momento em que o formulário foi aberto (proteção contra robôs)
     };
 
     setLoading(true);
@@ -141,7 +142,7 @@ export default function FormularioKids({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <CamposAntiRobo />
+        <CampoIsca />
         {mensagem && (
           <div role="alert" className="p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
             {mensagem}

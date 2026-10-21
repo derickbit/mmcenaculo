@@ -1,31 +1,34 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { preCadastroSchema, validar } from "@/lib/inscricao";
-import { LIMITES, limitar } from "@/lib/limite";
+import { LIMITES, limitar, mensagemLimite } from "@/lib/limite";
 import { ipDoCliente } from "@/lib/ip";
 import { pareceRobo } from "@/lib/honeypot";
 
+// Resultado da lista de espera: o formulário mostra os avisos ao lado de cada campo, sem apagar o que a pessoa digitou.
+export type EstadoListaEspera =
+  | { status: "ok" }
+  | { status: "erro"; mensagem: string; erros: Record<string, string> };
+
 // Lista de espera (pré-cadastro). Vem do formulário público, então tudo é validado aqui no servidor.
-export async function salvarPreCadastro(formData: FormData) {
+export async function salvarPreCadastro(_estadoAnterior: EstadoListaEspera | null, formData: FormData): Promise<EstadoListaEspera> {
   // Limite de tentativas por IP (cada envio conta, certo ou errado)
   const limite = await limitar(
     `precadastro:${ipDoCliente(await headers())}`,
     LIMITES.preCadastro.maximo,
     LIMITES.preCadastro.janelaSegundos
   );
-  if (!limite.permitido) redirect("/inscricao?erroPre=limite");
+  if (!limite.permitido) return { status: "erro", mensagem: mensagemLimite(limite.tentarEmSegundos), erros: {} };
 
   const enviado = Object.fromEntries(formData.entries());
 
-  // Robô: finge que deu certo e descarta. Sem JavaScript o horário de abertura não é preenchido,
-  // então aqui ele não é exigido (para não descartar uma pessoa de verdade em silêncio).
-  if (pareceRobo(enviado)) redirect("/inscricao?sucessoPre=true");
+  // Robô: finge que deu certo e descarta. O formulário sempre manda o horário em que foi aberto.
+  if (pareceRobo(enviado, { exigirAbertura: true })) return { status: "ok" };
 
   const r = validar(preCadastroSchema, enviado);
-  if (!r.ok) redirect("/inscricao?erroPre=1");
+  if (!r.ok) return { status: "erro", mensagem: "Confira os campos destacados.", erros: r.erros };
 
   const { nome, email, telefone, tipo } = r.dados;
 
@@ -36,5 +39,5 @@ export async function salvarPreCadastro(formData: FormData) {
     await prisma.preCadastro.create({ data: { nome, email, telefone, tipo } });
   }
 
-  redirect("/inscricao?sucessoPre=true");
+  return { status: "ok" };
 }
