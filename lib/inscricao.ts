@@ -1,12 +1,12 @@
 import { z } from "zod";
+import { PARENTESCOS, idadeEm } from "./kids";
+
+// As constantes e o cálculo de idade ficam em lib/kids.ts (sem zod); são reexportados aqui por conveniência.
+export { PARENTESCOS, FAIXA_KIDS, idadeEm, foraDaFaixaKids } from "./kids";
 
 // Regras de entrada das inscrições. A API valida o que chega do formulário com estes schemas.
 // Adulto: campos extras são ignorados. Kids: campo extra é REJEITADO (nada além do mínimo é aceito).
 
-export const PARENTESCOS = ["MAE", "PAI", "AVO", "TIO", "RESPONSAVEL_LEGAL", "OUTRO"] as const;
-
-// Faixa do Cenáculo Kids. Fora dela a inscrição é aceita, mas a equipe é avisada no painel.
-export const FAIXA_KIDS = { min: 8, max: 10 };
 const IDADE_MAXIMA_CRIANCA = 17;
 
 const limpar = (s: string) => s.trim().replace(/\s+/g, " ");
@@ -20,21 +20,6 @@ function lerData(texto: string): Date | null {
   const data = new Date(Date.UTC(ano, mes - 1, dia));
   const existe = data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia;
   return existe ? data : null;
-}
-
-// Idade completa em `referencia`, contando pelo calendário (UTC, como as datas ficam no banco).
-export function idadeEm(nascimento: Date, referencia: Date): number {
-  const idade = referencia.getUTCFullYear() - nascimento.getUTCFullYear();
-  const jaFezAniversario =
-    referencia.getUTCMonth() > nascimento.getUTCMonth() ||
-    (referencia.getUTCMonth() === nascimento.getUTCMonth() && referencia.getUTCDate() >= nascimento.getUTCDate());
-  return jaFezAniversario ? idade : idade - 1;
-}
-
-// A criança está fora de 8 a 10 anos na data do evento? (usado para avisar a equipe)
-export function foraDaFaixaKids(nascimento: Date, dataEvento: Date): boolean {
-  const idade = idadeEm(nascimento, dataEvento);
-  return idade < FAIXA_KIDS.min || idade > FAIXA_KIDS.max;
 }
 
 // ---------- peças reutilizáveis ----------
