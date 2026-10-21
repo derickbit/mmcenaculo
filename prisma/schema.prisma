@@ -21,6 +21,7 @@ model Evento {
   duracaoDias  Int         @default(1) // 1, 2 ou 3 dias
 
   inscricoes   Inscricao[]  
+  inscricoesKids InscricaoKids[]
   fotos        Foto[]       
 }
 
@@ -54,6 +55,37 @@ model Inscricao {
   evento              Evento       @relation(fields: [eventoId], references: [id], onDelete: Cascade)
   
   observacoes         Observacao[] 
+
+  @@unique([email, eventoId])
+}
+
+// Inscrição do Cenáculo Kids. Fica separada da inscrição de adultos de propósito:
+// só guarda dados simples da criança; o consentimento é dado pelo responsável (LGPD).
+model InscricaoKids {
+  id                  String   @id @default(uuid())
+  criadoEm            DateTime @default(now())
+
+  // Criança: apenas dados simples (sem sobrenome, e-mail, telefone ou endereço)
+  criancaNome         String   // primeiro nome
+  criancaNascimento   DateTime
+  saudeObservacao     String?  // texto opcional (alergia, restrição, medicação)
+  saudeComEquipe      Boolean  @default(false) // true = prefere falar direto com a equipe no dia (e não registra aqui)
+
+  // Responsável: contato e quem dá o consentimento
+  responsavelNome     String
+  responsavelTelefone String
+  responsavelEmail    String   // normalizado em minúsculas pela API
+  parentesco          String
+
+  consentimentoEm     DateTime // quando o responsável aceitou o termo
+
+  eventoId            String
+  evento              Evento       @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  observacoes         Observacao[]
+
+  // Irmãos podem se inscrever (nome ou nascimento mudam); a mesma criança, não.
+  @@unique([eventoId, responsavelEmail, criancaNome, criancaNascimento])
 }
 
 model Observacao {
@@ -64,8 +96,12 @@ model Observacao {
   usuarioId   String
   usuario     Usuario   @relation(fields: [usuarioId], references: [id])
 
-  inscricaoId String
-  inscricao   Inscricao @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  // Uma nota pertence a uma inscrição de adulto OU a uma inscrição Kids (nunca às duas; o código garante).
+  inscricaoId     String?
+  inscricao       Inscricao?     @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+
+  inscricaoKidsId String?
+  inscricaoKids   InscricaoKids? @relation(fields: [inscricaoKidsId], references: [id], onDelete: Cascade)
 }
 
 // NOVA TABELA: Lista de Espera / Pré-cadastro
