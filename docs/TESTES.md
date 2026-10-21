@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  9 passed (9)
-      Tests  112 passed (112)
+ Test Files  11 passed (11)
+      Tests  128 passed (128)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -97,9 +97,10 @@ Chamam a rota `POST /api/inscricao` de verdade, contra o banco de testes.
 
 ### 5. Lista de espera: `app/inscricao/actions.test.ts` (8 testes, com banco)
 
-Testa `salvarPreCadastro`: grava e normaliza o e-mail; repetir o mesmo e-mail e retiro não cria outra linha (e responde igual);
-dados inválidos voltam com o aviso de erro e nada é gravado; a 6ª tentativa do mesmo IP é recusada; robôs recebem sucesso falso
-sem gravar; quem usa o formulário sem JavaScript (sem o horário de abertura) ainda é gravado normalmente.
+Testa `salvarPreCadastro`, que devolve um resultado (`ok` ou `erro` com o aviso de cada campo): grava e normaliza o e-mail; repetir o
+mesmo e-mail e retiro não cria outra linha (e responde igual); dados inválidos não gravam nada e devolvem o aviso do campo errado; a
+6ª tentativa do mesmo IP é recusada; robôs (campo escondido preenchido, envio rápido demais ou sem o horário de abertura) recebem
+sucesso falso sem gravar.
 
 ### 6. Limitador de tentativas: `lib/limite.test.ts` (8 testes, com banco) e `lib/ip.test.ts` (4 testes)
 
@@ -123,6 +124,25 @@ O limitador (`lib/limite.ts`) conta tentativas por chave (por exemplo, o IP) num
 
 Campo escondido preenchido é robô; formulário enviado em menos de 1 segundo é robô; sem o horário de abertura só é robô quando
 o horário é exigido; pessoa de verdade passa.
+
+### 9. Telefone: `lib/telefone.test.ts` (7 testes, sem banco)
+
+A regra do telefone (DDD + número, 10 ou 11 dígitos, aceita o `55` do país na frente) e a máscara que formata enquanto a pessoa
+digita: fixo vira `(53) 3333-4444` e celular `(53) 99999-9999`. O DDD 55 (Santa Maria) não é confundido com o código do país.
+
+### 10. Telas dos formulários: `app/inscricao/formularios.test.tsx` (11 testes, sem banco)
+
+Abrem o formulário de verdade (num navegador simulado, o `jsdom`), digitam como uma pessoa e conferem **o que seria enviado** e **o
+que aparece na tela**, para adulto, Kids e lista de espera.
+
+- **O horário em que o formulário foi aberto vai junto no envio**, mesmo depois de a pessoa digitar. Foi esse teste que reproduziu um
+  bug sério: o horário era apagado a cada tecla, e o servidor tratava todo mundo como robô e descartava a inscrição.
+- **Telefone inválido não é enviado:** o aviso aparece ao lado do campo e o que foi digitado continua na tela. Corrigindo só o
+  telefone, o aviso some e o envio passa.
+- **Avisos do servidor** aparecem ao lado do campo certo, sem apagar o resto.
+- **Kids:** só os campos combinados são enviados; o botão "prefiro informar à equipe" desabilita o texto de saúde e vira um aviso.
+
+Esses testes não precisam de banco.
 
 ## O banco de testes
 
@@ -177,7 +197,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 112 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 128 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
