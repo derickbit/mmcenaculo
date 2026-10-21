@@ -9,10 +9,29 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+
+    # Postgres temporário só para os testes de banco; some quando o job termina.
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: cenaculodb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d cenaculodb_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       # Valores falsos, só para o build compilar. Nenhum segredo real é usado aqui.
-      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/cenaculodb_test
       SESSION_SECRET: segredo-falso-so-para-o-ci-0123456789abcdef
+      # Banco dos testes (o nome precisa terminar em _test).
+      DATABASE_URL_TESTE: postgresql://ci:ci@localhost:5432/cenaculodb_test
 
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +45,9 @@ jobs:
 
       # Gera o client do Prisma (os tipos do banco) antes de checar o código.
       - run: npx prisma generate
+
+      # Cria as tabelas no Postgres temporário.
+      - run: npx prisma db push
 
       - run: npm run lint
       - run: npm test

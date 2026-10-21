@@ -23,7 +23,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     include: {
       evento: true,
       observacoes: {
-        include: { admin: true },
+        include: { usuario: { select: { nome: true } } },
         orderBy: { criadoEm: 'asc' }
       }
     }

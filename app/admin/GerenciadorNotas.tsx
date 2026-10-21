@@ -8,7 +8,7 @@ type Observacao = {
   id: string;
   texto: string;
   criadoEm: Date;
-  admin: { nome: string };
+  usuario: { nome: string };
 };
 
 export default function GerenciadorNotas({ inscricaoId, observacoes }: { inscricaoId: string, observacoes: Observacao[] }) {
@@ -46,7 +46,7 @@ export default function GerenciadorNotas({ inscricaoId, observacoes }: { inscric
               <div key={obs.id} className="bg-white p-2 rounded border border-gray-200 text-sm">
                 <p className="text-gray-800">{obs.texto}</p>
                 <div className="text-[10px] text-gray-400 mt-1 font-semibold uppercase tracking-wider">
-                  Por {obs.admin.nome} em {new Date(obs.criadoEm).toLocaleDateString('pt-BR')} às {new Date(obs.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  Por {obs.usuario.nome} em {new Date(obs.criadoEm).toLocaleDateString('pt-BR')} às {new Date(obs.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             ))}

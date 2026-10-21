@@ -15,7 +15,7 @@ export default function BotaoExportar({ inscricoes, nomeEvento }: { inscricoes: 
       // 🔴 NOVA LÓGICA: Transforma o array de notas em um texto legível para o Excel
       const notasFormatadas = insc.observacoes && insc.observacoes.length > 0
         ? insc.observacoes.map(obs => 
-            `[${new Date(obs.criadoEm).toLocaleDateString('pt-BR')} por ${obs.admin.nome}]: ${obs.texto}`
+            `[${new Date(obs.criadoEm).toLocaleDateString('pt-BR')} por ${obs.usuario.nome}]: ${obs.texto}`
           ).join(" | ") // Separa as notas por uma barra vertical
         : "-";
 

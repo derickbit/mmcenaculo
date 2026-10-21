@@ -64,8 +64,18 @@ Variáveis de ambiente (veja `.env.example`):
 | `DATABASE_URL` | Conexão com o PostgreSQL |
 | `SESSION_SECRET` | Assinatura da sessão do admin (mínimo 32 caracteres) |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Envio de imagens (preset `cenaculo_preset`) |
+| `DATABASE_URL_TESTE` | Opcional: banco só para testes (o nome precisa terminar em `_test`) |
 
 O primeiro administrador é criado direto no banco, na tabela `Usuario`, com `primeiroAcesso = true`. No primeiro login a pessoa define a própria senha.
+
+## Testes
+
+```bash
+npm test
+```
+
+Os testes cobrem a regra de status dos eventos e o registro de notas internas, e também rodam automaticamente no GitHub (aba **Actions**) a cada envio de código.
+Como funcionam, o que cada um verifica e como criar o banco de testes: [docs/TESTES.md](docs/TESTES.md).
 
 ## Autor
 
