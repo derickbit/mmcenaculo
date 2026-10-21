@@ -105,11 +105,13 @@ Se alguma tabela mudar no `prisma/schema.prisma`, rode o `db push` de novo tamb�
 
 ## Verificação automática no GitHub (CI)
 
-O arquivo `.github/workflows/ci.yml` roda a cada push na `main` e a cada Pull Request: instala as dependências, gera o
-client do Prisma, roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
+O arquivo `.github/workflows/ci.yml` roda a cada push na `main` e a cada Pull Request, numa máquina do GitHub:
+sobe um Postgres temporário, instala as dependências, gera o client do Prisma, cria as tabelas (`prisma db push`) e
+roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
-**Limitação atual:** o CI ainda não tem um banco Postgres, então lá os testes de notas são pulados e rodam só na sua
-máquina. Os 22 testes de status do evento rodam nos dois lugares.
+Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
+**todos os 25 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
 
