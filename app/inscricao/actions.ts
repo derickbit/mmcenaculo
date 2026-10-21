@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { preCadastroSchema, validar } from "@/lib/inscricao";
 import { LIMITES, limitar } from "@/lib/limite";
 import { ipDoCliente } from "@/lib/ip";
+import { pareceRobo } from "@/lib/honeypot";
 
 // Lista de espera (pré-cadastro). Vem do formulário público, então tudo é validado aqui no servidor.
 export async function salvarPreCadastro(formData: FormData) {
@@ -17,7 +18,13 @@ export async function salvarPreCadastro(formData: FormData) {
   );
   if (!limite.permitido) redirect("/inscricao?erroPre=limite");
 
-  const r = validar(preCadastroSchema, Object.fromEntries(formData.entries()));
+  const enviado = Object.fromEntries(formData.entries());
+
+  // Robô: finge que deu certo e descarta. Sem JavaScript o horário de abertura não é preenchido,
+  // então aqui ele não é exigido (para não descartar uma pessoa de verdade em silêncio).
+  if (pareceRobo(enviado)) redirect("/inscricao?sucessoPre=true");
+
+  const r = validar(preCadastroSchema, enviado);
   if (!r.ok) redirect("/inscricao?erroPre=1");
 
   const { nome, email, telefone, tipo } = r.dados;

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import CamposAntiRobo from "./CamposAntiRobo";
 import { FAIXA_KIDS, PARENTESCOS, PARENTESCO_ROTULOS, TEXTO_CONSENTIMENTO, foraDaFaixaKids } from "@/lib/kids";
 
 const campo = "mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none";
@@ -75,6 +76,8 @@ export default function FormularioKids({
       responsavelEmail: texto("responsavelEmail"),
       parentesco: texto("parentesco"),
       consentimento,
+      website: texto("website"),
+      abertoEm: texto("abertoEm"),
     };
 
     setLoading(true);
@@ -138,6 +141,7 @@ export default function FormularioKids({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        <CamposAntiRobo />
         {mensagem && (
           <div role="alert" className="p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
             {mensagem}

@@ -108,4 +108,26 @@ describe.skipIf(!urlTeste)("salvarPreCadastro (banco de testes)", () => {
     origem.ip = `ip-${sufixo}-outro`; // outro IP não é afetado
     await expect(salvarPreCadastro(form(sexta))).rejects.toThrow("sucessoPre");
   });
+
+  it("robô (campo escondido preenchido ou envio rápido demais): finge sucesso e não grava", async () => {
+    const preenchido = lista({ email: `robo1.${sufixo}@teste.com`, website: "http://spam.example" });
+    await expect(salvarPreCadastro(form(preenchido))).rejects.toThrow("REDIRECT:/inscricao?sucessoPre=true");
+    expect(await quantos(preenchido.email)).toBe(0);
+
+    const rapido = lista({ email: `robo2.${sufixo}@teste.com`, abertoEm: String(Date.now() - 500) });
+    await expect(salvarPreCadastro(form(rapido))).rejects.toThrow("REDIRECT:/inscricao?sucessoPre=true");
+    expect(await quantos(rapido.email)).toBe(0);
+  });
+
+  it("pessoa de verdade passa: campo escondido vazio e formulário aberto há mais de 1 segundo", async () => {
+    const entrada = lista({ email: `gente.${sufixo}@teste.com`, website: "", abertoEm: String(Date.now() - 10_000) });
+    await expect(salvarPreCadastro(form(entrada))).rejects.toThrow("REDIRECT:/inscricao?sucessoPre=true");
+    expect(await quantos(entrada.email)).toBe(1);
+  });
+
+  it("sem o horário de abertura (formulário sem JavaScript) ainda grava normalmente", async () => {
+    const entrada = lista({ email: `semjs.${sufixo}@teste.com` });
+    await expect(salvarPreCadastro(form(entrada))).rejects.toThrow("sucessoPre");
+    expect(await quantos(entrada.email)).toBe(1);
+  });
 });

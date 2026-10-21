@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import Formulario from "./Formulario";
 import FormularioKids from "./FormularioKids";
+import CamposAntiRobo from "./CamposAntiRobo";
 import Link from "next/link";
 import { salvarPreCadastro } from "./actions";
 import { getStatusReal } from "@/lib/eventos";
@@ -81,6 +82,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
               )}
 
               <form action={salvarPreCadastro} className="space-y-4">
+                <CamposAntiRobo />
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Qual retiro você tem interesse?</label>
                   <select name="tipo" className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none bg-white">

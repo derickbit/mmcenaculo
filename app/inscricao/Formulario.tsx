@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { listaParoquias } from "@/lib/paroquias";
+import CamposAntiRobo from "./CamposAntiRobo";
 
 // Aqui está a correção: A função agora recebe as variáveis corretamente!
 export default function Formulario({ 
@@ -100,6 +101,7 @@ export default function Formulario({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <CamposAntiRobo />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Nome Completo *</label>
