@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PARENTESCOS, idadeEm } from "./kids";
+import { telefoneValido } from "./telefone";
 
 // As constantes e o cálculo de idade ficam em lib/kids.ts (sem zod); são reexportados aqui por conveniência.
 export { PARENTESCOS, FAIXA_KIDS, idadeEm, foraDaFaixaKids } from "./kids";
@@ -43,14 +44,8 @@ const email = (rotulo: string) =>
     .transform((s) => s.trim().toLowerCase())
     .pipe(z.email(`${rotulo} inválido.`).max(254, `${rotulo}: máximo de 254 caracteres.`));
 
-// 10 ou 11 dígitos (DDD + número); aceita o código do país (55) na frente.
-const digitosDoTelefone = (t: string) => {
-  const d = t.replace(/\D/g, "");
-  return d.length >= 12 && d.startsWith("55") ? d.slice(2) : d;
-};
-
 const telefone = (rotulo: string) =>
-  obrigatorio(rotulo, 20).refine((t) => [10, 11].includes(digitosDoTelefone(t).length), `${rotulo} inválido. Use DDD + número.`);
+  obrigatorio(rotulo, 20).refine((t) => telefoneValido(t), `${rotulo} inválido. Use DDD + número.`);
 
 const dataNascimento = (rotulo: string) =>
   z
