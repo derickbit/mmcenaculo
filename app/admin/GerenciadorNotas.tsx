@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { adicionarNota } from "./actions";
+import { adicionarNota, adicionarNotaKids } from "./actions";
 
 // Tipagem para o TypeScript não reclamar
 type Observacao = {
@@ -11,14 +11,14 @@ type Observacao = {
   usuario: { nome: string };
 };
 
-export default function GerenciadorNotas({ inscricaoId, observacoes }: { inscricaoId: string, observacoes: Observacao[] }) {
+export default function GerenciadorNotas({ inscricaoId, observacoes, tipo = "ADULTO" }: { inscricaoId: string, observacoes: Observacao[], tipo?: "ADULTO" | "KIDS" }) {
   const [aberto, setAberto] = useState(false);
   const [carregando, setCarregando] = useState(false);
 
   // Envolvemos a server action para dar um feedback visual (loading)
   async function handleSalvar(formData: FormData) {
     setCarregando(true);
-    await adicionarNota(inscricaoId, formData);
+    await (tipo === "KIDS" ? adicionarNotaKids : adicionarNota)(inscricaoId, formData);
     setCarregando(false);
     // Limpa o input (reset no form) precisa ser feito via DOM, mas como é simples, deixamos o form revalidar a página
   }
