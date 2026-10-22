@@ -6,7 +6,15 @@ import { aceitarConviteAction } from "./actions";
 
 const campo = "mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold outline-none";
 
-export default function FormularioConvite({ codigo, nomeUsuario }: { codigo: string; nomeUsuario: string }) {
+export default function FormularioConvite({
+  codigo,
+  nomeUsuario,
+  redefinicao = false,
+}: {
+  codigo: string;
+  nomeUsuario: string;
+  redefinicao?: boolean; // true = a conta já existe e só ganha uma senha nova
+}) {
   const [estado, enviar] = useActionState(aceitarConviteAction, null);
 
   // Campos controlados: o que a pessoa digitou fica na tela mesmo quando há um aviso para corrigir.
@@ -36,10 +44,20 @@ export default function FormularioConvite({ codigo, nomeUsuario }: { codigo: str
   return (
     <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border-t-8 border-cenaculo-blue">
       <h1 className="text-3xl font-extrabold text-cenaculo-blue text-center">
-        Criar sua <span className="text-cenaculo-gold">conta</span>
+        {redefinicao ? (
+          <>
+            Definir nova <span className="text-cenaculo-gold">senha</span>
+          </>
+        ) : (
+          <>
+            Criar sua <span className="text-cenaculo-gold">conta</span>
+          </>
+        )}
       </h1>
       <p className="mt-3 mb-6 text-center text-gray-600 text-sm">
-        Você foi convidado(a) para o painel da coordenação do MMC. Escolha uma senha para entrar.
+        {redefinicao
+          ? "A sua senha foi redefinida pela coordenação. Escolha uma nova senha para entrar no painel."
+          : "Você foi convidado(a) para o painel da coordenação do MMC. Escolha uma senha para entrar."}
       </p>
 
       {estado?.mensagem && Object.keys(estado.erros).length === 0 && (
@@ -105,7 +123,7 @@ export default function FormularioConvite({ codigo, nomeUsuario }: { codigo: str
         </div>
 
         <button type="submit" className="w-full bg-cenaculo-blue text-white font-bold py-3.5 rounded-md hover:bg-[#1a1d7a] transition shadow-md mt-2">
-          Criar conta e entrar
+          {redefinicao ? "Salvar senha e entrar" : "Criar conta e entrar"}
         </button>
       </form>
     </div>

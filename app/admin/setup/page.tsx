@@ -14,7 +14,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   if (!sessao.pa) redirect("/admin");
 
   const params = await searchParams;
-  const usuarioNome = sessao.sub;
+  const usuarioNome = sessao.nome;
 
   async function redefinirSenha(formData: FormData) {
     "use server";
@@ -32,7 +32,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
     const senhaCriptografada = await bcrypt.hash(novaSenha, 10);
 
     await prisma.usuario.update({
-      where: { nome: atual.sub },
+      where: { id: atual.sub },
       data: { senha: senhaCriptografada, primeiroAcesso: false },
     });
 

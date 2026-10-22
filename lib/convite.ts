@@ -35,7 +35,7 @@ export async function criarConvite(dados: { nomeUsuario: string; criadoPorId: st
   if (existente) return { ok: false, motivo: "NOME_EM_USO", mensagem: "Já existe um usuário com esse nome." };
 
   const pendente = await prisma.convite.findFirst({
-    where: { nomeUsuario: { equals: nome, mode: "insensitive" }, usadoEm: null, revogadoEm: null, expiraEm: { gt: agora } },
+    where: { nomeUsuario: { equals: nome, mode: "insensitive" }, usuarioAlvoId: null, usadoEm: null, revogadoEm: null, expiraEm: { gt: agora } },
     select: { id: true },
   });
   if (pendente) {
@@ -50,6 +50,45 @@ export async function criarConvite(dados: { nomeUsuario: string; criadoPorId: st
       expiraEm: new Date(agora.getTime() + DURACAO_CONVITE_MS),
       criadoPorId: dados.criadoPorId,
     },
+  });
+  return { ok: true, codigo, convite };
+}
+
+// ---------- redefinir a senha de uma conta que já existe ----------
+
+export type ResultadoRedefinicao =
+  | { ok: true; codigo: string; convite: Convite }
+  | { ok: false; motivo: "CONTA_INEXISTENTE" | "NAO_PERMITIDO"; mensagem: string };
+
+// Gera o link para a pessoa escolher uma senha nova. Ao gerar, a senha ATUAL deixa de funcionar na hora e as sessões abertas
+// são derrubadas (se o motivo do pedido for suspeita de que alguém descobriu a senha, o acesso já está barrado).
+// Links de redefinição anteriores e ainda pendentes dessa conta são revogados. Só contas de COORDENACAO ativas.
+export async function criarRedefinicao(dados: { usuarioId: string; criadoPorId: string; agora?: Date }): Promise<ResultadoRedefinicao> {
+  const agora = dados.agora ?? new Date();
+
+  const alvo = await prisma.usuario.findUnique({ where: { id: dados.usuarioId }, select: { id: true, nome: true, papel: true, ativo: true } });
+  if (!alvo) return { ok: false, motivo: "CONTA_INEXISTENTE", mensagem: "Conta não encontrada." };
+  if (alvo.papel === "ADMIN") {
+    return { ok: false, motivo: "NAO_PERMITIDO", mensagem: "A senha de um administrador não é redefinida por aqui." };
+  }
+  if (!alvo.ativo) return { ok: false, motivo: "NAO_PERMITIDO", mensagem: "Reative a conta antes de redefinir a senha." };
+
+  const codigo = gerarCodigo();
+  // Uma senha que ninguém conhece: a antiga para de funcionar até a pessoa escolher a nova.
+  const senhaInutilizavel = await bcrypt.hash(gerarCodigo(), CUSTO_DA_SENHA);
+
+  const convite = await prisma.$transaction(async (tx) => {
+    await tx.convite.updateMany({ where: { usuarioAlvoId: alvo.id, usadoEm: null, revogadoEm: null }, data: { revogadoEm: agora } });
+    await tx.usuario.update({ where: { id: alvo.id }, data: { senha: senhaInutilizavel, sessoesValidasDesde: agora } });
+    return tx.convite.create({
+      data: {
+        codigoHash: hashDoCodigo(codigo),
+        nomeUsuario: alvo.nome,
+        expiraEm: new Date(agora.getTime() + DURACAO_CONVITE_MS),
+        criadoPorId: dados.criadoPorId,
+        usuarioAlvoId: alvo.id,
+      },
+    });
   });
   return { ok: true, codigo, convite };
 }
@@ -87,6 +126,7 @@ export async function aceitarConvite(codigo: string, senha: string, agora: Date 
   const senhaCriptografada = await bcrypt.hash(senha, CUSTO_DA_SENHA);
 
   class NomeEmUso extends Error {}
+  class ContaIndisponivel extends Error {}
   try {
     return await prisma.$transaction(async (tx): Promise<ResultadoAceite> => {
       const gasto = await tx.convite.updateMany({
@@ -94,6 +134,15 @@ export async function aceitarConvite(codigo: string, senha: string, agora: Date 
         data: { usadoEm: agora },
       });
       if (gasto.count !== 1) return CONVITE_INVALIDO;
+
+      // Link de REDEFINIÇÃO: a conta já existe e só ganha a senha nova (nada de criar outra conta).
+      if (convite.usuarioAlvoId) {
+        const alvo = await tx.usuario.findUnique({ where: { id: convite.usuarioAlvoId }, select: { id: true, nome: true, ativo: true, papel: true } });
+        if (!alvo || !alvo.ativo || alvo.papel === "ADMIN") throw new ContaIndisponivel(); // desfaz: o link não gasta
+        // Derruba também qualquer sessão aberta desde que o link foi gerado.
+        await tx.usuario.update({ where: { id: alvo.id }, data: { senha: senhaCriptografada, sessoesValidasDesde: agora, primeiroAcesso: false } });
+        return { ok: true, usuario: { id: alvo.id, nome: alvo.nome } };
+      }
 
       const existente = await tx.usuario.findFirst({ where: { nome: { equals: convite.nomeUsuario, mode: "insensitive" } }, select: { id: true } });
       if (existente) throw new NomeEmUso(); // desfaz a transação: o convite continua livre
@@ -107,6 +156,7 @@ export async function aceitarConvite(codigo: string, senha: string, agora: Date 
     });
   } catch (erro) {
     if (erro instanceof NomeEmUso) return NOME_EM_USO;
+    if (erro instanceof ContaIndisponivel) return CONVITE_INVALIDO;
     if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") return NOME_EM_USO;
     throw erro;
   }

@@ -4,12 +4,10 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { exigirSessao } from "@/lib/auth";
 
-// Autor da nota: vem da sessão assinada (não de um cookie forjável) e precisa existir.
+// Autor da nota: vem da sessão assinada (não de um cookie forjável). O exigirSessao já conferiu que a conta existe e está ativa.
 async function usuarioDaSessao() {
   const sessao = await exigirSessao();
-  const usuario = await prisma.usuario.findUnique({ where: { nome: sessao.sub }, select: { id: true } });
-  if (!usuario) throw new Error("Não autorizado");
-  return usuario;
+  return { id: sessao.sub };
 }
 
 export async function adicionarNota(inscricaoId: string, formData: FormData) {

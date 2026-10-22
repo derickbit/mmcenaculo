@@ -5,8 +5,9 @@ export const COOKIE_SESSAO = "cenaculo-session";
 export const DURACAO_SESSAO_SEGUNDOS = 60 * 60 * 8; // 8 horas
 
 export type Sessao = {
-  sub: string; // nome do usuário
+  sub: string; // identificador da conta (nunca muda, mesmo que o nome seja alterado)
   pa: boolean; // true = ainda precisa trocar a senha (primeiro acesso)
+  iat: number; // quando o cookie foi emitido, em milissegundos (uma redefinição de senha derruba os anteriores)
   exp: number; // expiração em segundos desde 1970
 };
 
@@ -44,11 +45,12 @@ function deBase64Url(texto: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(binario, (c) => c.charCodeAt(0));
 }
 
-export async function criarToken(usuario: string, primeiroAcesso: boolean): Promise<string> {
+export async function criarToken(usuarioId: string, primeiroAcesso: boolean): Promise<string> {
   const chave = await importarChave(lerSegredo());
   const sessao: Sessao = {
-    sub: usuario,
+    sub: usuarioId,
     pa: primeiroAcesso,
+    iat: Date.now(),
     exp: Math.floor(Date.now() / 1000) + DURACAO_SESSAO_SEGUNDOS,
   };
   const corpo = paraBase64Url(encoder.encode(JSON.stringify(sessao)));
@@ -78,6 +80,7 @@ export async function verificarToken(token?: string | null): Promise<Sessao | nu
     if (
       typeof sessao.sub !== "string" ||
       typeof sessao.pa !== "boolean" ||
+      typeof sessao.iat !== "number" ||
       typeof sessao.exp !== "number"
     ) {
       return null;

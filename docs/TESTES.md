@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  17 passed (17)
-      Tests  204 passed (204)
+ Test Files  19 passed (19)
+      Tests  234 passed (234)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -112,7 +112,7 @@ O limitador (`lib/limite.ts`) conta tentativas por chave (por exemplo, o IP) num
 - `estaBloqueado` só consulta, sem contar; `limpar` zera; `limparVencidas` apaga só o que tem mais de um dia.
 - `lib/ip.ts` lê o IP do visitante (primeiro IP do `x-forwarded-for`; valor padrão se não houver).
 
-### 7. Login: `app/api/login/route.test.ts` (7 testes, com banco)
+### 7. Login: `app/api/login/route.test.ts` (10 testes, com banco)
 
 O login conta só as senhas **erradas**, em duas contagens separadas, ambas numa janela de 15 minutos (valores em `LIMITES`, em
 `lib/limite.ts`):
@@ -129,6 +129,10 @@ O que os testes conferem:
 - Um IP que erra com muitos nomes diferentes é bloqueado para todos os usuários.
 - O bloqueio vale também para nomes que não existem, sem revelar quais usuários existem.
 - Um login certo zera as falhas daquele usuário.
+- **Conta desativada não entra**, mesmo com a senha certa, e a resposta é igual à de senha errada (não revela que a conta existe).
+  Reativada, volta a entrar.
+- O nome do usuário vale em maiúsculas ou minúsculas (e com espaços nas pontas).
+- O cookie de sessão guarda o **identificador da conta**, e não o nome.
 
 ### 8. Honeypot: `lib/honeypot.test.ts` (7 testes, sem banco)
 
@@ -200,7 +204,7 @@ voltou** para conferir o conteúdo.
 - **Frequência:** entrega os membros com as presenças, e filtra por grupo.
 - Evento inexistente e relatório desconhecido dão 404.
 
-### 13. Convites para contas do painel: `lib/convite-regras.test.ts` (24 testes, sem banco) e `lib/convite.test.ts` (14 testes, com banco)
+### 13. Convites para contas do painel: `lib/convite-regras.test.ts` (24 testes, sem banco) e `lib/convite.test.ts` (21 testes, com banco)
 
 O admin gera um **link de uso único** para uma pessoa criar a conta dela: ele escolhe o **usuário** e a pessoa só define a senha.
 
@@ -224,10 +228,19 @@ O admin gera um **link de uso único** para uma pessoa criar a conta dela: ele e
 - **Vários cliques ao mesmo tempo** no mesmo link criam, no máximo, uma conta.
 - **Revogar:** só convites livres (não os já usados nem os já revogados).
 
+*Redefinição de senha* (o admin gera um link para uma conta que já existe):
+
+- **Gerar o link já invalida a senha atual** (a antiga para de funcionar na hora) e **derruba as sessões abertas** da conta.
+- Aceitar o link dá a senha nova à **mesma conta** (nenhuma conta nova é criada), o link não funciona de novo, e as sessões abertas
+  desde que o link foi gerado também caem.
+- Gerar outro link revoga o anterior que ainda estava pendente.
+- Não redefine senha de **administrador**, de conta **desativada** nem de conta que não existe (e nesses casos a senha fica intacta).
+- Se a conta for desativada depois de gerado o link, o link não vale e a senha não muda.
+
 Há duas proteções sobrepostas contra reuso de convite (a checagem do estado e a condição dentro da transação). Foi confirmado que os
 testes falham se **as duas** forem removidas.
 
-### 14. Página do convite: `app/convite/[codigo]/actions.test.ts` (5 testes, com banco) e `convite.test.tsx` (7 testes, de tela)
+### 14. Página do convite: `app/convite/[codigo]/actions.test.ts` (5 testes, com banco) e `convite.test.tsx` (9 testes, de tela)
 
 A pessoa convidada abre o link, vê o **usuário que o admin escolheu** já preenchido (só para leitura) e define apenas a senha.
 
@@ -245,8 +258,31 @@ A pessoa convidada abre o link, vê o **usuário que o admin escolheu** já pree
 - A página mostra o formulário para um convite válido. Para link inexistente, vencido, já usado ou revogado, mostra **exatamente a
   mesma mensagem**, sem o nome do usuário e sem formulário: ninguém descobre se um código já existiu.
 
+- O **link de redefinição** usa a mesma página, com o texto "Definir nova senha" e o usuário que já existe (em vez de "Criar sua conta").
+
 A página também pede ao navegador para **não repassar o código do endereço** a outros sites (`no-referrer`) e fica fora dos buscadores.
 O link inválido responde com o mesmo status de um válido (200), para o código de resposta também não entregar nada.
+
+### 15. Sessão e contas: `lib/session.test.ts` (7 testes, sem banco) e `lib/auth.test.ts` (12 testes, com banco)
+
+O cookie de login (a "sessão") guarda o **identificador da conta**, o momento em que foi emitido e quando vence, tudo assinado.
+
+*O cookie (`lib/session.ts`):*
+
+- Não aceita cookie ausente, malformado, **adulterado** (trocar a conta dentro dele invalida a assinatura), assinado com **outro
+  segredo**, vencido, ou de formato antigo (assinado direito, mas sem o momento de emissão). Sem o segredo configurado, falha de forma
+  explícita.
+
+*Conferência no banco (`lib/auth.ts`):*
+
+- **Conta desativada não tem sessão**, mesmo com o cookie dentro da validade, e isso vale **na hora**; reativar devolve o acesso.
+- Cookie de conta que não existe não vale.
+- **Redefinir a senha derruba os cookies anteriores:** um cookie emitido antes não vale mais; um novo login vale.
+- **Renomear não passa o acesso para outra pessoa:** como o cookie guarda a conta (e não o nome), quem ficar com o nome antigo de alguém
+  não herda a sessão dele.
+- `exigirSessao` barra quem não entrou, quem está com a senha provisória e conta desativada.
+- **Só o ADMIN:** `exigirAdmin` (ações) barra a coordenação; `exigirAdminPagina` leva a coordenação de volta ao painel e quem não entrou
+  ao login.
 
 ## O banco de testes
 
@@ -301,7 +337,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 204 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 234 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo

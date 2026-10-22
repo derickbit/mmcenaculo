@@ -29,7 +29,7 @@ export default async function ConvitePage({ params }: { params: Promise<{ codigo
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <FormularioConvite codigo={codigo} nomeUsuario={convite.nomeUsuario} />
+      <FormularioConvite codigo={codigo} nomeUsuario={convite.nomeUsuario} redefinicao={convite.usuarioAlvoId !== null} />
     </main>
   );
 }

@@ -76,12 +76,12 @@ describe.skipIf(!urlTeste)("aceitar convite pela página (banco de testes)", () 
 
     await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/admin");
 
-    expect(await prisma.usuario.count({ where: { nome: convite.nomeUsuario, papel: "COORDENACAO", ativo: true } })).toBe(1);
+    const conta = await prisma.usuario.findFirstOrThrow({ where: { nome: convite.nomeUsuario, papel: "COORDENACAO", ativo: true } });
 
     expect(cookiesGravados).toHaveLength(1);
     const dados = await sessao.verificarToken(cookiesGravados[0].valor);
     expect(cookiesGravados[0].nome).toBe(sessao.COOKIE_SESSAO);
-    expect(dados?.sub).toBe(convite.nomeUsuario);
+    expect(dados?.sub).toBe(conta.id); // o cookie guarda o identificador da conta, não o nome
     expect(dados?.pa).toBe(false); // sem pendência de troca de senha
   });
 

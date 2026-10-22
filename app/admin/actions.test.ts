@@ -10,6 +10,7 @@ if (urlTeste && !new URL(urlTeste).pathname.slice(1).endsWith("_test")) {
 }
 
 // A sessão e o revalidatePath do Next não existem fora do servidor: trocamos por versões simples.
+// O sub da sessão é o identificador da conta; que ela exista e esteja ativa é conferido no exigirSessao (ver lib/auth.test.ts).
 const { sessao } = vi.hoisted(() => ({ sessao: { sub: "" } }));
 vi.mock("@/lib/auth", () => ({
   // sub vazio = ninguém logado
@@ -98,7 +99,7 @@ describe.skipIf(!urlTeste)("adicionarNota (banco de testes)", () => {
   });
 
   it("grava a nota com o usuário logado e lista com o nome do autor", async () => {
-    sessao.sub = `teste-${sufixo}`;
+    sessao.sub = usuarioId;
     await adicionarNota(inscricaoId, form("Precisa de carona"));
 
     const notas = await prisma.observacao.findMany({
@@ -111,16 +112,8 @@ describe.skipIf(!urlTeste)("adicionarNota (banco de testes)", () => {
     expect(notas[0].usuario.nome).toBe(`teste-${sufixo}`);
   });
 
-  it("recusa e não grava nada quando o usuário da sessão não existe", async () => {
-    sessao.sub = `nao-existe-${sufixo}`;
-    await expect(adicionarNota(inscricaoId, form("nota fantasma"))).rejects.toThrow("Não autorizado");
-
-    const fantasma = await prisma.observacao.count({ where: { inscricaoId, texto: "nota fantasma" } });
-    expect(fantasma).toBe(0);
-  });
-
   it("texto vazio não cria nota", async () => {
-    sessao.sub = `teste-${sufixo}`;
+    sessao.sub = usuarioId;
     const antes = await prisma.observacao.count({ where: { inscricaoId } });
     await adicionarNota(inscricaoId, form(""));
     expect(await prisma.observacao.count({ where: { inscricaoId } })).toBe(antes);
@@ -128,7 +121,7 @@ describe.skipIf(!urlTeste)("adicionarNota (banco de testes)", () => {
 
   describe("inscrição Kids", () => {
     it("grava a nota ligada só à inscrição Kids, com o autor", async () => {
-      sessao.sub = `teste-${sufixo}`;
+      sessao.sub = usuarioId;
       await adicionarNotaKids(inscricaoKidsId, form("Alergia a amendoim, mãe avisou no dia"));
 
       const notas = await prisma.observacao.findMany({
@@ -141,11 +134,8 @@ describe.skipIf(!urlTeste)("adicionarNota (banco de testes)", () => {
       expect(notas[0].usuario.nome).toBe(`teste-${sufixo}`);
     });
 
-    it("recusa usuário inexistente e texto vazio não cria nota", async () => {
-      sessao.sub = `nao-existe-${sufixo}`;
-      await expect(adicionarNotaKids(inscricaoKidsId, form("fantasma"))).rejects.toThrow("Não autorizado");
-
-      sessao.sub = `teste-${sufixo}`;
+    it("texto vazio não cria nota", async () => {
+      sessao.sub = usuarioId;
       const antes = await prisma.observacao.count({ where: { inscricaoKidsId } });
       await adicionarNotaKids(inscricaoKidsId, form(""));
       expect(await prisma.observacao.count({ where: { inscricaoKidsId } })).toBe(antes);
@@ -164,7 +154,7 @@ describe.skipIf(!urlTeste)("adicionarNota (banco de testes)", () => {
     });
 
     it("excluir a inscrição apaga também as notas dela, sem tocar nas outras", async () => {
-      sessao.sub = `teste-${sufixo}`;
+      sessao.sub = usuarioId;
       const outra = await novaInscricaoKids("Davi");
       await adicionarNotaKids(outra.id, form("nota que deve sumir"));
 

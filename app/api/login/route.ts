@@ -41,10 +41,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const usuario = await prisma.usuario.findUnique({ where: { nome } });
+    const usuario = await prisma.usuario.findFirst({ where: { nome: { equals: nome.trim(), mode: "insensitive" } } });
 
     let senhaValida = false;
-    if (!usuario) {
+    if (!usuario || !usuario.ativo) {
+      // Conta que não existe ou desativada: gasta o mesmo tempo e dá a mesma resposta de senha errada.
       await bcrypt.compare(senha, HASH_FALSO);
     } else if (usuario.primeiroAcesso) {
       // Senha provisória cadastrada à mão no banco (texto puro) ou já em hash.
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       senhaValida = await bcrypt.compare(senha, usuario.senha);
     }
 
-    if (!usuario || !senhaValida) {
+    if (!usuario || !usuario.ativo || !senhaValida) {
       await Promise.all([
         registrarTentativa(chaveIp, limiteIp.janelaSegundos),
         registrarTentativa(chaveUsuario, limiteUsuario.janelaSegundos),
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     await limpar(chaveUsuario); // login certo zera as falhas desse usuário
-    const token = await criarToken(usuario.nome, usuario.primeiroAcesso);
+    const token = await criarToken(usuario.id, usuario.primeiroAcesso);
 
     const response = NextResponse.json(
       { message: "Login realizado com sucesso", primeiroAcesso: usuario.primeiroAcesso },

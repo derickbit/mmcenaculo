@@ -79,10 +79,10 @@ describe("formulário do convite", () => {
 });
 
 describe("página do convite", () => {
-  const consulta = (estado: "VALIDO" | "INEXISTENTE" | "EXPIRADO" | "USADO" | "REVOGADO") =>
+  const consulta = (estado: "VALIDO" | "INEXISTENTE" | "EXPIRADO" | "USADO" | "REVOGADO", usuarioAlvoId: string | null = null) =>
     vi.mocked(consultarConvite).mockResolvedValue({
       estado,
-      convite: estado === "INEXISTENTE" ? null : ({ nomeUsuario: "mateus" } as never),
+      convite: estado === "INEXISTENTE" ? null : ({ nomeUsuario: "mateus", usuarioAlvoId } as never),
     });
   const abrirPagina = async () => render(await ConvitePage({ params: Promise.resolve({ codigo: "abc123" }) }));
 
@@ -91,6 +91,22 @@ describe("página do convite", () => {
     const { container } = await abrirPagina();
     expect(campo(container, "usuario").value).toBe("mateus");
     expect(screen.queryByText(/inválido ou expirado/)).toBeNull();
+  });
+
+  it("convite para criar conta: fala em criar a conta", async () => {
+    consulta("VALIDO");
+    await abrirPagina();
+    expect(screen.getByText("Criar conta e entrar")).toBeTruthy();
+    expect(screen.queryByText("Salvar senha e entrar")).toBeNull();
+  });
+
+  it("link de redefinição de senha: fala em definir uma nova senha, com o usuário que já existe", async () => {
+    consulta("VALIDO", "id-da-conta");
+    const { container } = await abrirPagina();
+    expect(campo(container, "usuario").value).toBe("mateus");
+    expect(screen.getByText("Salvar senha e entrar")).toBeTruthy();
+    expect(screen.getByText(/redefinida pela coordenação/)).toBeTruthy();
+    expect(screen.queryByText("Criar conta e entrar")).toBeNull();
   });
 
   it("link inválido, vencido, usado ou revogado: a MESMA mensagem, sem revelar o usuário", async () => {

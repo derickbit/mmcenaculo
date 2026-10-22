@@ -157,11 +157,14 @@ model Usuario {
   primeiroAcesso Boolean  @default(true) // 🔴 NOVO: Todo usuário nasce precisando trocar a senha
   papel          String   @default("COORDENACAO") // ADMIN (gere contas) ou COORDENACAO; os dois veem todos os dados
   ativo          Boolean  @default(true) // conta desativada não entra
+  // Sessões (cookies de login) emitidas antes desta data deixam de valer. Uma redefinição de senha avança esta data.
+  sessoesValidasDesde DateTime @default(now())
   criadoEm       DateTime @default(now())
 
   observacoes    Observacao[]
   convitesCriados Convite[] @relation("ConviteCriador")
   convite         Convite?  @relation("ConviteUsuario") // o convite que criou esta conta (se houve)
+  convitesDeRedefinicao Convite[] @relation("ConviteAlvo") // links de redefinição de senha desta conta
 }
 
 // Contador de tentativas por chave (ex.: "inscricao:203.0.113.5") dentro de uma janela de tempo.
@@ -189,4 +192,9 @@ model Convite {
 
   usadoPorId  String?   @unique
   usadoPor    Usuario?  @relation("ConviteUsuario", fields: [usadoPorId], references: [id])
+
+  // Preenchido só nos links de REDEFINIÇÃO de senha: a conta que já existe e vai ganhar uma senha nova.
+  // Vazio = convite para criar uma conta nova.
+  usuarioAlvoId String?
+  alvo          Usuario?  @relation("ConviteAlvo", fields: [usuarioAlvoId], references: [id])
 }

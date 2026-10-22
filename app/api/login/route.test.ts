@@ -128,4 +128,35 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
     }
     expect((await entrar(nome, SENHA, novoIp())).status).toBe(200);
   });
+
+  it("conta desativada não entra, mesmo com a senha certa, e a resposta é igual à de senha errada", async () => {
+    const nome = await novoUsuario();
+    await prisma.usuario.update({ where: { nome }, data: { ativo: false } });
+
+    const desativada = await entrar(nome, SENHA, novoIp());
+    const senhaErrada = await entrar((await novoUsuario()), "senha-errada", novoIp());
+    expect(desativada.status).toBe(401);
+    expect(desativada.headers.get("set-cookie")).toBeNull();
+    expect(await desativada.json()).toEqual(await senhaErrada.json()); // não revela que a conta existe, mas está desativada
+
+    await prisma.usuario.update({ where: { nome }, data: { ativo: true } });
+    expect((await entrar(nome, SENHA, novoIp())).status).toBe(200); // reativada, volta a entrar
+  });
+
+  it("o nome do usuário vale em maiúsculas ou minúsculas", async () => {
+    const nome = await novoUsuario();
+    expect((await entrar(nome.toUpperCase(), SENHA, novoIp())).status).toBe(200);
+    expect((await entrar(`  ${nome}  `, SENHA, novoIp())).status).toBe(200); // espaços nas pontas também não atrapalham
+  });
+
+  it("o cookie de sessão guarda o identificador da conta", async () => {
+    const nome = await novoUsuario();
+    const resposta = await entrar(nome, SENHA, novoIp());
+    const cookie = /cenaculo-session=([^;]+)/.exec(resposta.headers.get("set-cookie") ?? "")?.[1];
+    expect(cookie).toBeTruthy();
+
+    const { verificarToken } = await import("@/lib/session");
+    const conta = await prisma.usuario.findUniqueOrThrow({ where: { nome } });
+    expect((await verificarToken(cookie))?.sub).toBe(conta.id);
+  });
 });
