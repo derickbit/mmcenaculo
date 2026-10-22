@@ -85,6 +85,13 @@ Há dois cargos: **administrador** (o dono do sistema, **só um**) e **coordena�
 - **Senha esquecida (coordenação):** o administrador clica em **Redefinir senha**; a senha atual deixa de funcionar na hora e ele envia um novo link para a pessoa escolher outra.
 - **Desligar alguém:** **Desativar** bloqueia o acesso na hora e não apaga nada (o histórico, como as notas, continua intacto). Dá para reativar.
 
+## Deploy (Vercel + Supabase)
+
+- **Build Command da Vercel:** deixe o padrão (`npm run build`, que gera o client do Prisma e compila o site). **Não rode `prisma db push` no build**: ele mudaria o banco de produção automaticamente a cada deploy, sem ninguém revisar o SQL (e foi a causa de um deploy falho, quando se recusou a apagar uma coluna com dados).
+- **Mudanças no banco em produção** são feitas à mão, com um SQL gerado e testado antes (`prisma migrate diff`), no SQL Editor do Supabase. Mudanças que apagam algo vão em **duas etapas**: primeiro acrescentar o novo (antes do deploy) e só depois remover o antigo (depois do deploy).
+- Variáveis de ambiente na Vercel: `DATABASE_URL`, `SESSION_SECRET` e `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`.
+- Os ícones do site (`app/icon.png` e `app/apple-icon.png`) foram gerados a partir de `public/images/logo.png` sobre o azul da marca.
+
 ## Testes
 
 ```bash
