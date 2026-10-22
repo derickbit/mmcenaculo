@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import * as XLSX from 'xlsx';
 
 const GRUPOS_OFICIAIS = [
   "Salve Maria",
@@ -134,22 +133,8 @@ export default function PainelAbasFrequencia({
     return resultado.sort((a, b) => b.presencas.length - a.presencas.length);
   }, [membros, filtroGrupoRelatorio]);
 
-  const exportarExcel = () => {
-    const dadosMapeados = membrosFiltradosParaRelatorio.map(m => {
-      const listaEventos = m.presencas.map(p => p.atividade?.nome).filter(Boolean).join(", ");
-      return {
-        "Nome": m.nome,
-        "Grupo": m.grupo,
-        "Cenáculo": m.cenaculoFeito ? `${m.cenaculoFeito}º` : 'N/A',
-        "Total de Presenças": m.presencas.length,
-        "Eventos Frequentados": listaEventos || "Nenhum evento registrado"
-      };
-    });
-    const worksheet = XLSX.utils.json_to_sheet(dadosMapeados);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio_Frequencia");
-    XLSX.writeFile(workbook, "Relatorio_Frequencia_MMC.xlsx");
-  };
+  // A planilha é montada no servidor; o link leva o grupo escolhido no filtro.
+  const enderecoExportacao = `/api/admin/exportar/frequencia${filtroGrupoRelatorio ? `?grupo=${encodeURIComponent(filtroGrupoRelatorio)}` : ""}`;
 
   return (
     <>
@@ -393,10 +378,10 @@ export default function PainelAbasFrequencia({
                     {todosOsGruposParaFiltro.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
 
-                  <button onClick={exportarExcel} className="bg-green-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-green-700 transition shadow flex items-center justify-center gap-2">
+                  <a href={enderecoExportacao} download className="bg-green-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-green-700 transition shadow flex items-center justify-center gap-2">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     Exportar Excel
-                  </button>
+                  </a>
                 </div>
               </div>
 

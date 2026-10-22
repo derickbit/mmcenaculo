@@ -4,6 +4,7 @@ import { FAIXA_KIDS, PARENTESCO_ROTULOS, foraDaFaixaKids, idadeEm, type Parentes
 import FiltroEventos from "../FiltroEventos";
 import GerenciadorNotas from "../GerenciadorNotas";
 import BotaoDeletar from "../BotaoDeletar";
+import BotaoExportar from "../BotaoExportar";
 import { excluirInscricaoKids } from "../actions";
 
 export const revalidate = 0;
@@ -47,8 +48,11 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
-      <div className="mb-6 bg-cenaculo-blue text-white px-6 py-4 rounded-xl shadow font-bold">
-        Total: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
+      <div className="mb-6 bg-cenaculo-blue text-white px-6 py-4 rounded-xl shadow flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="font-bold">
+          Total: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
+        </div>
+        <BotaoExportar href={`/api/admin/exportar/kids${eventoId ? `?eventoId=${encodeURIComponent(eventoId)}` : ""}`} />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">

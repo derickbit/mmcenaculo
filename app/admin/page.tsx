@@ -56,10 +56,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <div className="font-bold">
           Total neste evento: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
         </div>
-        <BotaoExportar 
-          inscricoes={inscricoes} 
-          nomeEvento={eventoSelecionadoId ? (eventos.find(e => e.id === eventoSelecionadoId)?.nome || "Evento") : "Todos_os_Eventos"} 
-        />
+        <BotaoExportar href={`/api/admin/exportar/inscritos${eventoSelecionadoId ? `?eventoId=${encodeURIComponent(eventoSelecionadoId)}` : ""}`} />
       </div>
 
       {/* CHAMA A NOSSA NOVA TABELA INTELIGENTE E PASSA OS DADOS DO PRISMA */}
