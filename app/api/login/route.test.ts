@@ -15,6 +15,7 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
   const SENHA = "senha-certa-123";
   let prisma: PrismaClient;
   let POST: (request: Request) => Promise<Response>;
+  let limites: typeof import("@/lib/limite").LIMITES;
   let ipN = 0;
   let nomeN = 0;
   const nomesCriados: string[] = [];
@@ -49,6 +50,7 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
     process.env.SESSION_SECRET = "segredo-so-para-os-testes-0123456789abcdef";
     prisma = (await import("@/lib/prisma")).default;
     POST = (await import("./route")).POST;
+    limites = (await import("@/lib/limite")).LIMITES;
   });
 
   afterAll(async () => {
@@ -76,10 +78,10 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
     expect(await errada.json()).toEqual(await inexistente.json());
   });
 
-  it("depois de 5 senhas erradas, bloqueia por um tempo, mesmo com a senha certa", async () => {
+  it("depois de muitos erros no mesmo usuário, bloqueia por um tempo, mesmo com a senha certa", async () => {
     const nome = await novoUsuario();
     const ip = novoIp();
-    await errar(nome, ip, 5);
+    await errar(nome, ip, limites.loginFalhasUsuario.maximo);
 
     const bloqueada = await entrar(nome, SENHA, ip);
     expect(bloqueada.status).toBe(429);
@@ -87,23 +89,32 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
     expect((await bloqueada.json()).error).toMatch(/Muitas tentativas/);
   });
 
-  it("o bloqueio vale para o usuário em qualquer IP, e para o IP com qualquer usuário", async () => {
+  it("o bloqueio do usuário vale em qualquer IP, mas não trava os outros usuários do mesmo IP", async () => {
     const alvo = await novoUsuario();
     const outro = await novoUsuario();
-    const ipAtacante = novoIp();
-    await errar(alvo, ipAtacante, 5);
+    const ip = novoIp();
+    await errar(alvo, ip, limites.loginFalhasUsuario.maximo);
 
-    expect((await entrar(alvo, SENHA, novoIp())).status).toBe(429); // mesmo usuário, IP novo
-    expect((await entrar(outro, SENHA, ipAtacante)).status).toBe(429); // mesmo IP, outro usuário
-    expect((await entrar(outro, SENHA, novoIp())).status).toBe(200); // outro usuário, outro IP: livre
+    expect((await entrar(alvo, SENHA, novoIp())).status).toBe(429); // mesmo usuário, IP novo: bloqueado
+    expect((await entrar(outro, SENHA, ip)).status).toBe(200); // outro usuário, mesmo IP: livre (o IP tem teto maior)
+  });
+
+  it("o IP que erra com vários nomes diferentes é bloqueado para todos os usuários", async () => {
+    const outro = await novoUsuario();
+    const ipVarredura = novoIp();
+    for (let i = 0; i < limites.loginFalhasIp.maximo; i++) {
+      expect((await entrar(`varredura-${sufixo}-${i}`, "qualquer", ipVarredura)).status).toBe(401);
+    }
+
+    expect((await entrar(outro, SENHA, ipVarredura)).status).toBe(429); // mesmo IP: bloqueado, mesmo com a senha certa
+    expect((await entrar(outro, SENHA, novoIp())).status).toBe(200); // outro IP: livre
   });
 
   it("o bloqueio também vale para nomes que não existem, sem revelar se existem", async () => {
     const fantasma = `fantasma-${sufixo}`;
     const ip = novoIp();
-    await errar(fantasma, ip, 5);
-    const sexta = await entrar(fantasma, "qualquer", ip);
-    expect(sexta.status).toBe(429);
+    await errar(fantasma, ip, limites.loginFalhasUsuario.maximo);
+    expect((await entrar(fantasma, "qualquer", ip)).status).toBe(429);
   });
 
   it("um login certo zera as falhas daquele usuário", async () => {
@@ -111,8 +122,10 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
     await errar(nome, novoIp(), 3);
     expect((await entrar(nome, SENHA, novoIp())).status).toBe(200);
 
-    // depois do login certo, mais 4 erros (de IPs diferentes) não bloqueiam: a contagem recomeçou
-    for (let i = 0; i < 4; i++) expect((await entrar(nome, "senha-errada", novoIp())).status).toBe(401);
+    // depois do login certo, quase o máximo de erros (de IPs diferentes) ainda não bloqueia: a contagem recomeçou
+    for (let i = 0; i < limites.loginFalhasUsuario.maximo - 1; i++) {
+      expect((await entrar(nome, "senha-errada", novoIp())).status).toBe(401);
+    }
     expect((await entrar(nome, SENHA, novoIp())).status).toBe(200);
   });
 });
