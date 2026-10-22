@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  26 passed (26)
-      Tests  295 passed (295)
+ Test Files  27 passed (27)
+      Tests  298 passed (298)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -112,7 +112,7 @@ O limitador (`lib/limite.ts`) conta tentativas por chave (por exemplo, o IP) num
 - `estaBloqueado` só consulta, sem contar; `limpar` zera; `limparVencidas` apaga só o que tem mais de um dia.
 - `lib/ip.ts` lê o IP do visitante (primeiro IP do `x-forwarded-for`; valor padrão se não houver).
 
-### 7. Login: `app/api/login/route.test.ts` (10 testes, com banco)
+### 7. Login: `app/api/login/route.test.ts` (11 testes, com banco)
 
 O login conta só as senhas **erradas**, em duas contagens separadas, ambas numa janela de 15 minutos (valores em `LIMITES`, em
 `lib/limite.ts`):
@@ -133,6 +133,8 @@ O que os testes conferem:
   Reativada, volta a entrar.
 - O nome do usuário vale em maiúsculas ou minúsculas (e com espaços nas pontas).
 - O cookie de sessão guarda o **identificador da conta**, e não o nome.
+- **Não existe senha provisória:** uma conta cuja senha foi gravada em texto puro (sem criptografia) **não entra**, nem digitando
+  exatamente essa senha. Foi confirmado que o teste falha se esse caminho voltar.
 
 ### 8. Honeypot: `lib/honeypot.test.ts` (7 testes, sem banco)
 
@@ -189,13 +191,12 @@ vale para arquivos **CSV**. Num `.xlsx`, texto é gravado como texto, e só vira
 apóstrofo estragaria dados de verdade (por exemplo, um telefone começando com `+55`) para evitar um risco que não existe. O teste
 acima é a garantia no lugar disso: se uma troca futura de biblioteca mudar esse comportamento, ele avisa.
 
-### 12. Rotas de exportação: `app/api/painelmmc/exportar/[tipo]/route.test.ts` (10 testes, com banco)
+### 12. Rotas de exportação: `app/api/painelmmc/exportar/[tipo]/route.test.ts` (9 testes, com banco)
 
 Chamam `GET /api/painelmmc/exportar/inscritos`, `/kids` e `/frequencia` de verdade, contra o banco de testes, e **abrem o `.xlsx` que
 voltou** para conferir o conteúdo.
 
-- **Quem pode baixar:** sem login, nenhuma das três planilhas é entregue (erro 401); com a senha provisória ainda não trocada, também
-  não. A rota confere o login por conta própria, sem depender só do proxy.
+- **Quem pode baixar:** sem login, nenhuma das três planilhas é entregue (erro 401). A rota confere o login por conta própria, sem depender só do proxy.
 - **Inscritos adultos:** entrega o evento escolhido, com as notas e o nome de quem escreveu, sem as inscrições de outros eventos e sem
   nenhuma criança. Sem escolher evento, entrega todos. O nome do arquivo e o tipo (`.xlsx`) vêm certos, e a resposta não fica em cache.
 - **Texto perigoso** digitado no formulário (`=1+1`, `=HYPERLINK(...)`) sai como texto, sem fórmula, também por este caminho.
@@ -263,7 +264,7 @@ A pessoa convidada abre o link, vê o **usuário que o admin escolheu** já pree
 A página também pede ao navegador para **não repassar o código do endereço** a outros sites (`no-referrer`) e fica fora dos buscadores.
 O link inválido responde com o mesmo status de um válido (200), para o código de resposta também não entregar nada.
 
-### 15. Sessão e contas: `lib/session.test.ts` (7 testes, sem banco) e `lib/auth.test.ts` (12 testes, com banco)
+### 15. Sessão e contas: `lib/session.test.ts` (7 testes, sem banco) e `lib/auth.test.ts` (10 testes, com banco)
 
 O cookie de login (a "sessão") guarda o **identificador da conta**, o momento em que foi emitido e quando vence, tudo assinado.
 
@@ -280,11 +281,11 @@ O cookie de login (a "sessão") guarda o **identificador da conta**, o momento e
 - **Redefinir a senha derruba os cookies anteriores:** um cookie emitido antes não vale mais; um novo login vale.
 - **Renomear não passa o acesso para outra pessoa:** como o cookie guarda a conta (e não o nome), quem ficar com o nome antigo de alguém
   não herda a sessão dele.
-- `exigirSessao` barra quem não entrou, quem está com a senha provisória e conta desativada.
+- `exigirSessao` barra quem não entrou e conta desativada.
 - **Só o ADMIN:** `exigirAdmin` (ações) barra a coordenação; `exigirAdminPagina` leva a coordenação de volta ao painel e quem não entrou
   ao login.
 
-### 16. Painel escondido: `proxy.test.ts` (6 testes, sem banco)
+### 16. Painel escondido: `proxy.test.ts` (5 testes, sem banco)
 
 O proxy é a primeira porta do painel (`/painelmmc`). Ele confere só o cookie; a conferência completa, no banco, é feita em cada página
 e em cada ação.
@@ -295,7 +296,6 @@ e em cada ação.
   rota inexistente.
 - Cookie falso, vazio ou **adulterado** (trocar a conta dentro dele) é tratado como sem sessão.
 - Com sessão válida, o painel abre.
-- Senha provisória: só a tela de troca de senha; quem já trocou volta ao painel.
 - **Fora dos buscadores:** as páginas e a API do painel mandam o cabeçalho `X-Robots-Tag: noindex, nofollow`. (Não se usa o
   `robots.txt` de propósito: ele anunciaria o endereço do painel.) As páginas públicas não recebem esse cabeçalho.
 
@@ -337,18 +337,36 @@ como ADMIN, são o cargo no banco; "excluir" uma conta é **desativar**: o hist�
 - **O menu** mostra o item **"Usuários" só para o ADMIN** (a coordenação vê o resto do menu), mostra quem está logado e o cargo, e na
   tela de login não há menu.
 
-### 18. Todas as páginas conferem a sessão: `app/painelmmc/protecao.test.ts` (13 testes, sem banco)
+### 18. Todas as páginas conferem a sessão: `app/painelmmc/protecao.test.ts` (12 testes, sem banco)
 
 O proxy só olha o cookie. Se uma página não conferir a sessão **no banco**, uma conta desativada (com a pessoa logada) continua vendo
 os dados. Isso aconteceu de verdade e foi descoberto num teste com o site compilado: a lista de inscritos, eventos, lista de espera,
 galeria e frequência abriam mesmo com a conta desativada, enquanto a exportação e as ações já barravam. Foi corrigido, e este teste
 **impede que volte**:
 
-- **Varre todas as páginas do painel** e exige que cada uma (menos a de login, que é pública, e a de primeiro acesso) chame
+- **Varre todas as páginas do painel** e exige que cada uma (menos a de login, que é pública) chame
   `exigirSessaoPagina()` ou `exigirAdminPagina()` **antes de qualquer uso do banco**. Uma página nova, criada sem essa conferência, faz o
   teste falhar com uma mensagem apontando qual.
 - Faz o mesmo para toda **rota de API** do painel (exige `lerSessao()` antes do banco).
 - Prova, na lista de inscritos, que sem sessão válida a página é interrompida **antes de consultar o banco**.
+
+### 19. Script do primeiro administrador: `lib/primeiro-admin.test.ts` (7 testes, sem banco)
+
+O administrador é o dono do sistema: **só um**, e ele **não** nasce por convite nem pelo painel, só pelo terminal (`npm run admin:criar`).
+Para esquecer a senha dele, há `npm run admin:redefinir-senha` (a tela de usuários não mexe na conta de administrador, de propósito).
+A lógica (`lib/primeiro-admin.ts`) é testada contra um banco **falso, em memória**: um banco de verdade compartilhado com os outros
+testes já tem administradores criados por eles, e o que se testa aqui é a regra.
+
+- **Criar:** a conta é ADMIN, ativa, com a senha em **hash** (nunca em texto puro). Recusa se **já existe** um administrador (só pode
+  haver um), usuário inválido, senha fraca (menos de 10 caracteres) e usuário já usado por outra conta (sem diferenciar maiúsculas); nesses
+  casos nada é criado.
+- **Redefinir:** troca a senha, **derruba as sessões abertas** e não mexe em outras contas. Recusa senha fraca; avisa quando não há
+  administrador ou quando há mais de um (pede para informar qual); e **nunca altera uma conta que não seja ADMIN**.
+
+*O script de terminal em si* (`scripts/primeiro-admin.ts`) foi conferido rodando de verdade, com as respostas simuladas, contra um banco
+temporário: responder "não" na confirmação não muda nada; senhas diferentes ou curtas são recusadas; criar funciona; o **segundo admin é
+recusado**; redefinir funciona. Depois, com o site compilado, a senha nova entra, a antiga não, e a tela de gestão de usuários abre para
+esse administrador. O script mostra qual banco vai mexer e pede confirmação antes.
 
 ## O banco de testes
 
@@ -403,7 +421,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 295 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 298 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
