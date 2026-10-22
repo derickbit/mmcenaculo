@@ -10,6 +10,7 @@ export type ResultadoLimite = { permitido: boolean; tentarEmSegundos: number };
 export const LIMITES = {
   inscricao: { maximo: 10, janelaSegundos: 10 * 60 }, // por IP
   preCadastro: { maximo: 5, janelaSegundos: 10 * 60 }, // por IP
+  convite: { maximo: 10, janelaSegundos: 15 * 60 }, // por IP (cada tentativa de criar conta pelo link)
   // Erros de senha no login. O teto por IP é maior que o de um usuário só: na coordenação todos usam o mesmo Wi-Fi, e
   // um usuário que erra a senha não deve travar os outros; mas um IP que tenta vários nomes ainda é bloqueado.
   loginFalhasUsuario: { maximo: 5, janelaSegundos: 15 * 60 },

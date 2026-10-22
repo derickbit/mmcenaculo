@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  13 passed (13)
-      Tests  154 passed (154)
+ Test Files  27 passed (27)
+      Tests  298 passed (298)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -50,9 +50,9 @@ Testa a função `getStatusReal` (`lib/eventos.ts`), que decide se um evento est
 - A função recebe a hora atual como parâmetro opcional (`agora`). Os testes usam isso para "congelar"
   o relógio e não dependerem do dia em que são executados.
 
-### 2. Painel de admin: `app/admin/actions.test.ts` (7 testes)
+### 2. Painel de admin: `app/painelmmc/actions.test.ts` (7 testes)
 
-Testa a ação `adicionarNota` (`app/admin/actions.ts`), usada no painel para registrar uma observação sobre uma inscrição.
+Testa a ação `adicionarNota` (`app/painelmmc/actions.ts`), usada no painel para registrar uma observação sobre uma inscrição.
 
 - **Grava a nota com o usuário logado e lista com o nome do autor.** A nota deve ficar ligada ao `id` do usuário da sessão e, ao listar, o nome dele deve aparecer.
 - **Recusa e não grava nada se o usuário da sessão não existe.**
@@ -112,7 +112,7 @@ O limitador (`lib/limite.ts`) conta tentativas por chave (por exemplo, o IP) num
 - `estaBloqueado` só consulta, sem contar; `limpar` zera; `limparVencidas` apaga só o que tem mais de um dia.
 - `lib/ip.ts` lê o IP do visitante (primeiro IP do `x-forwarded-for`; valor padrão se não houver).
 
-### 7. Login: `app/api/login/route.test.ts` (7 testes, com banco)
+### 7. Login: `app/api/login/route.test.ts` (11 testes, com banco)
 
 O login conta só as senhas **erradas**, em duas contagens separadas, ambas numa janela de 15 minutos (valores em `LIMITES`, em
 `lib/limite.ts`):
@@ -129,6 +129,12 @@ O que os testes conferem:
 - Um IP que erra com muitos nomes diferentes é bloqueado para todos os usuários.
 - O bloqueio vale também para nomes que não existem, sem revelar quais usuários existem.
 - Um login certo zera as falhas daquele usuário.
+- **Conta desativada não entra**, mesmo com a senha certa, e a resposta é igual à de senha errada (não revela que a conta existe).
+  Reativada, volta a entrar.
+- O nome do usuário vale em maiúsculas ou minúsculas (e com espaços nas pontas).
+- O cookie de sessão guarda o **identificador da conta**, e não o nome.
+- **Não existe senha provisória:** uma conta cuja senha foi gravada em texto puro (sem criptografia) **não entra**, nem digitando
+  exatamente essa senha. Foi confirmado que o teste falha se esse caminho voltar.
 
 ### 8. Honeypot: `lib/honeypot.test.ts` (7 testes, sem banco)
 
@@ -185,13 +191,12 @@ vale para arquivos **CSV**. Num `.xlsx`, texto é gravado como texto, e só vira
 apóstrofo estragaria dados de verdade (por exemplo, um telefone começando com `+55`) para evitar um risco que não existe. O teste
 acima é a garantia no lugar disso: se uma troca futura de biblioteca mudar esse comportamento, ele avisa.
 
-### 12. Rotas de exportação: `app/api/admin/exportar/[tipo]/route.test.ts` (10 testes, com banco)
+### 12. Rotas de exportação: `app/api/painelmmc/exportar/[tipo]/route.test.ts` (9 testes, com banco)
 
-Chamam `GET /api/admin/exportar/inscritos`, `/kids` e `/frequencia` de verdade, contra o banco de testes, e **abrem o `.xlsx` que
+Chamam `GET /api/painelmmc/exportar/inscritos`, `/kids` e `/frequencia` de verdade, contra o banco de testes, e **abrem o `.xlsx` que
 voltou** para conferir o conteúdo.
 
-- **Quem pode baixar:** sem login, nenhuma das três planilhas é entregue (erro 401); com a senha provisória ainda não trocada, também
-  não. A rota confere o login por conta própria, sem depender só do proxy.
+- **Quem pode baixar:** sem login, nenhuma das três planilhas é entregue (erro 401). A rota confere o login por conta própria, sem depender só do proxy.
 - **Inscritos adultos:** entrega o evento escolhido, com as notas e o nome de quem escreveu, sem as inscrições de outros eventos e sem
   nenhuma criança. Sem escolher evento, entrega todos. O nome do arquivo e o tipo (`.xlsx`) vêm certos, e a resposta não fica em cache.
 - **Texto perigoso** digitado no formulário (`=1+1`, `=HYPERLINK(...)`) sai como texto, sem fórmula, também por este caminho.
@@ -199,6 +204,169 @@ voltou** para conferir o conteúdo.
   extenso, e nenhum adulto.
 - **Frequência:** entrega os membros com as presenças, e filtra por grupo.
 - Evento inexistente e relatório desconhecido dão 404.
+
+### 13. Convites para contas do painel: `lib/convite-regras.test.ts` (24 testes, sem banco) e `lib/convite.test.ts` (21 testes, com banco)
+
+O admin gera um **link de uso único** para uma pessoa criar a conta dela: ele escolhe o **usuário** e a pessoa só define a senha.
+
+*Regras sem banco* (`lib/convite-regras.ts`):
+
+- O **código do link** é aleatório (256 bits), nunca se repete e só usa caracteres seguros para um link. No banco fica apenas o **hash**
+  do código.
+- **Usuário** reservado: 3 a 30 caracteres, só letras sem acento, números, ponto, hífen e sublinhado.
+- **Senha:** no mínimo 10 caracteres e, no máximo, 72 *bytes* (o bcrypt ignoraria o resto em silêncio).
+- O convite vale **48 horas** e vence exatamente na hora marcada; "usado" e "revogado" valem mais que o prazo.
+
+*Com banco* (`lib/convite.ts`):
+
+- **Criar:** o código aparece só no retorno; o banco guarda o hash (o teste confirma que o código não está em nenhum campo). Recusa
+  usuário inválido, usuário que já existe (**sem diferenciar maiúsculas de minúsculas**) e um segundo convite pendente para o mesmo
+  usuário (que volta a ser possível depois de revogar ou de vencer).
+- **Aceitar:** cria a conta **COORDENACAO**, ativa, com a senha em hash, e marca o convite como usado. O mesmo link não funciona duas
+  vezes; convite vencido, revogado ou com código errado não cria nada.
+- **Senha fraca** é recusada e o convite continua livre para tentar de novo. Se o usuário foi ocupado no meio do caminho, a conta não é
+  criada e o convite **não é gasto** (a transação é desfeita).
+- **Vários cliques ao mesmo tempo** no mesmo link criam, no máximo, uma conta.
+- **Revogar:** só convites livres (não os já usados nem os já revogados).
+
+*Redefinição de senha* (o admin gera um link para uma conta que já existe):
+
+- **Gerar o link já invalida a senha atual** (a antiga para de funcionar na hora) e **derruba as sessões abertas** da conta.
+- Aceitar o link dá a senha nova à **mesma conta** (nenhuma conta nova é criada), o link não funciona de novo, e as sessões abertas
+  desde que o link foi gerado também caem.
+- Gerar outro link revoga o anterior que ainda estava pendente.
+- Não redefine senha de **administrador**, de conta **desativada** nem de conta que não existe (e nesses casos a senha fica intacta).
+- Se a conta for desativada depois de gerado o link, o link não vale e a senha não muda.
+
+Há duas proteções sobrepostas contra reuso de convite (a checagem do estado e a condição dentro da transação). Foi confirmado que os
+testes falham se **as duas** forem removidas.
+
+### 14. Página do convite: `app/convite/[codigo]/actions.test.ts` (5 testes, com banco) e `convite.test.tsx` (9 testes, de tela)
+
+A pessoa convidada abre o link, vê o **usuário que o admin escolheu** já preenchido (só para leitura) e define apenas a senha.
+
+*A ação do servidor (com banco):*
+
+- Cria a conta, **já entra no painel** (o cookie de sessão gravado é válido e é do usuário certo) e manda para `/painelmmc`.
+- Senhas diferentes ou senha curta: o aviso volta ao lado do campo e o convite **não é gasto**.
+- Link inválido ou já usado: a mesma mensagem, sem conta e sem cookie.
+- **Limite de tentativas** por IP (10 a cada 15 minutos): a 11ª é recusada mesmo com um convite válido, que continua livre; outro IP não é afetado.
+
+*As telas (num navegador simulado):*
+
+- O formulário mostra o usuário só para leitura; senha curta ou senhas diferentes **avisam ao lado do campo sem enviar nada**; uma senha
+  boa envia o código do convite e a senha; o aviso do servidor aparece **sem apagar o que foi digitado**.
+- A página mostra o formulário para um convite válido. Para link inexistente, vencido, já usado ou revogado, mostra **exatamente a
+  mesma mensagem**, sem o nome do usuário e sem formulário: ninguém descobre se um código já existiu.
+
+- O **link de redefinição** usa a mesma página, com o texto "Definir nova senha" e o usuário que já existe (em vez de "Criar sua conta").
+
+A página também pede ao navegador para **não repassar o código do endereço** a outros sites (`no-referrer`) e fica fora dos buscadores.
+O link inválido responde com o mesmo status de um válido (200), para o código de resposta também não entregar nada.
+
+### 15. Sessão e contas: `lib/session.test.ts` (7 testes, sem banco) e `lib/auth.test.ts` (10 testes, com banco)
+
+O cookie de login (a "sessão") guarda o **identificador da conta**, o momento em que foi emitido e quando vence, tudo assinado.
+
+*O cookie (`lib/session.ts`):*
+
+- Não aceita cookie ausente, malformado, **adulterado** (trocar a conta dentro dele invalida a assinatura), assinado com **outro
+  segredo**, vencido, ou de formato antigo (assinado direito, mas sem o momento de emissão). Sem o segredo configurado, falha de forma
+  explícita.
+
+*Conferência no banco (`lib/auth.ts`):*
+
+- **Conta desativada não tem sessão**, mesmo com o cookie dentro da validade, e isso vale **na hora**; reativar devolve o acesso.
+- Cookie de conta que não existe não vale.
+- **Redefinir a senha derruba os cookies anteriores:** um cookie emitido antes não vale mais; um novo login vale.
+- **Renomear não passa o acesso para outra pessoa:** como o cookie guarda a conta (e não o nome), quem ficar com o nome antigo de alguém
+  não herda a sessão dele.
+- `exigirSessao` barra quem não entrou e conta desativada.
+- **Só o ADMIN:** `exigirAdmin` (ações) barra a coordenação; `exigirAdminPagina` leva a coordenação de volta ao painel e quem não entrou
+  ao login.
+
+### 16. Painel escondido: `proxy.test.ts` (5 testes, sem banco)
+
+O proxy é a primeira porta do painel (`/painelmmc`). Ele confere só o cookie; a conferência completa, no banco, é feita em cada página
+e em cada ação.
+
+- **Sem sessão, o painel finge que não existe:** qualquer endereço do painel (menos a tela de login) responde "não encontrado", igual a
+  um endereço que nunca existiu, e **não redireciona ao login**. Assim, quem digita um endereço do painel não descobre que ele existe.
+  Só a tela de login (`/painelmmc/login`) se mostra. Foi conferido com o site compilado: a resposta é idêntica, byte a byte, à de uma
+  rota inexistente.
+- Cookie falso, vazio ou **adulterado** (trocar a conta dentro dele) é tratado como sem sessão.
+- Com sessão válida, o painel abre.
+- **Fora dos buscadores:** as páginas e a API do painel mandam o cabeçalho `X-Robots-Tag: noindex, nofollow`. (Não se usa o
+  `robots.txt` de propósito: ele anunciaria o endereço do painel.) As páginas públicas não recebem esse cabeçalho.
+
+Efeito a ter em mente: quem estiver deslogado e abrir um endereço salvo do painel (por exemplo `/painelmmc`) vê "não encontrado"; o
+caminho de entrada é `/painelmmc/login` (é para onde o cadeado do rodapé aponta).
+
+### 17. Gestão de contas: `lib/usuarios.test.ts` (12), `app/painelmmc/usuarios/actions.test.ts` (6), `usuarios.test.tsx` (16), `page.test.tsx` (2) e `app/painelmmc/PainelShell.test.tsx` (6)
+
+A tela `/painelmmc/usuarios`, **só para o ADMIN**: convidar pessoas, redefinir senhas, renomear e desativar contas. Os nomes em maiúsculas,
+como ADMIN, são o cargo no banco; "excluir" uma conta é **desativar**: o histórico dela fica intacto.
+
+*Lógica (`lib/usuarios.ts`, com banco):*
+
+- **Renomear:** as notas antigas passam a mostrar o nome novo (o histórico continua lá). Recusa nome inválido, nome de outra conta (sem
+  diferenciar maiúsculas; mudar só as maiúsculas da própria conta é permitido) e nome reservado por um convite pendente. Um link de
+  redefinição ainda pendente passa a mostrar o nome novo.
+- **Desativar:** a conta deixa de entrar na hora, as sessões abertas caem, os links de redefinição pendentes são revogados e **nada é
+  apagado**. **Reativar** devolve o acesso, mas os cookies de antes da desativação **continuam mortos**.
+- A conta de **administrador nunca é alterada** por aqui (renomear, desativar, reativar), nem conta que não existe.
+- As listas da tela: o admin vem primeiro, **a senha nunca é devolvida**, e o código do link de convite nunca aparece (no banco há só o hash).
+
+*As ações do servidor (`actions.test.ts`, com banco):*
+
+- **Sem login ou como coordenação, NENHUMA ação funciona e nada muda no banco** (nem convite novo, nem senha, nem desativação). Cada
+  ação confere o ADMIN antes de qualquer coisa; foi confirmado, uma a uma, que o teste falha se uma delas deixar de conferir.
+- Como ADMIN: gerar convite devolve o link **uma vez**; redefinir a senha devolve o link e a senha antiga para de funcionar; revogar,
+  renomear, desativar e reativar fazem o que dizem e recusam a conta de administrador.
+
+*A tela (`usuarios.test.tsx`, num navegador simulado):*
+
+- A conta de administrador aparece **protegida, sem botões**; as de coordenação têm Renomear, Redefinir senha e Desativar; a desativada
+  oferece Reativar.
+- O **link aparece uma única vez** (com o endereço do site e o aviso), o botão Copiar usa a área de transferência, e "Fechar" faz o link
+  sumir. Erros (por exemplo, usuário que já existe) aparecem ao lado do campo, sem apagar o que foi digitado.
+- Redefinir senha e desativar **perguntam antes**, avisando que a senha atual deixa de valer e que o histórico fica intacto; cancelar
+  não faz nada. Renomear abre um campo com o nome atual e, se o servidor recusar, mostra o motivo na linha e mantém o campo aberto.
+- A lista de convites mostra tipo, situação e quem usou; **só o pendente tem Revogar**.
+- **A página** só abre para o ADMIN: quem não é ADMIN é mandado embora **sem sequer carregar a lista de usuários**.
+- **O menu** mostra o item **"Usuários" só para o ADMIN** (a coordenação vê o resto do menu), mostra quem está logado e o cargo, e na
+  tela de login não há menu.
+
+### 18. Todas as páginas conferem a sessão: `app/painelmmc/protecao.test.ts` (12 testes, sem banco)
+
+O proxy só olha o cookie. Se uma página não conferir a sessão **no banco**, uma conta desativada (com a pessoa logada) continua vendo
+os dados. Isso aconteceu de verdade e foi descoberto num teste com o site compilado: a lista de inscritos, eventos, lista de espera,
+galeria e frequência abriam mesmo com a conta desativada, enquanto a exportação e as ações já barravam. Foi corrigido, e este teste
+**impede que volte**:
+
+- **Varre todas as páginas do painel** e exige que cada uma (menos a de login, que é pública) chame
+  `exigirSessaoPagina()` ou `exigirAdminPagina()` **antes de qualquer uso do banco**. Uma página nova, criada sem essa conferência, faz o
+  teste falhar com uma mensagem apontando qual.
+- Faz o mesmo para toda **rota de API** do painel (exige `lerSessao()` antes do banco).
+- Prova, na lista de inscritos, que sem sessão válida a página é interrompida **antes de consultar o banco**.
+
+### 19. Script do primeiro administrador: `lib/primeiro-admin.test.ts` (7 testes, sem banco)
+
+O administrador é o dono do sistema: **só um**, e ele **não** nasce por convite nem pelo painel, só pelo terminal (`npm run admin:criar`).
+Para esquecer a senha dele, há `npm run admin:redefinir-senha` (a tela de usuários não mexe na conta de administrador, de propósito).
+A lógica (`lib/primeiro-admin.ts`) é testada contra um banco **falso, em memória**: um banco de verdade compartilhado com os outros
+testes já tem administradores criados por eles, e o que se testa aqui é a regra.
+
+- **Criar:** a conta é ADMIN, ativa, com a senha em **hash** (nunca em texto puro). Recusa se **já existe** um administrador (só pode
+  haver um), usuário inválido, senha fraca (menos de 10 caracteres) e usuário já usado por outra conta (sem diferenciar maiúsculas); nesses
+  casos nada é criado.
+- **Redefinir:** troca a senha, **derruba as sessões abertas** e não mexe em outras contas. Recusa senha fraca; avisa quando não há
+  administrador ou quando há mais de um (pede para informar qual); e **nunca altera uma conta que não seja ADMIN**.
+
+*O script de terminal em si* (`scripts/primeiro-admin.ts`) foi conferido rodando de verdade, com as respostas simuladas, contra um banco
+temporário: responder "não" na confirmação não muda nada; senhas diferentes ou curtas são recusadas; criar funciona; o **segundo admin é
+recusado**; redefinir funciona. Depois, com o site compilado, a senha nova entra, a antiga não, e a tela de gestão de usuários abre para
+esse administrador. O script mostra qual banco vai mexer e pede confirmação antes.
 
 ## O banco de testes
 
@@ -214,7 +382,7 @@ docker exec mmcenaculo_postgres psql -U admin -d postgres -c "CREATE DATABASE ce
 Depois aplicar o schema nele (ajuste usuário e senha se os seus forem diferentes):
 
 ```bash
-DATABASE_URL="postgresql://admin:adminpassword@localhost:5432/cenaculodb_test" npx prisma db push
+DATABASE_URL="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test" npx prisma db push
 ```
 
 (No PowerShell: `$env:DATABASE_URL="..."; npx prisma db push`.)
@@ -222,7 +390,7 @@ DATABASE_URL="postgresql://admin:adminpassword@localhost:5432/cenaculodb_test" n
 **Ligar nos testes:** no `.env`, adicionar
 
 ```
-DATABASE_URL_TESTE="postgresql://admin:adminpassword@localhost:5432/cenaculodb_test"
+DATABASE_URL_TESTE="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test"
 ```
 
 Se alguma tabela mudar no `prisma/schema.prisma`, rode o `db push` de novo também no banco de testes.
@@ -253,7 +421,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 154 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 298 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
