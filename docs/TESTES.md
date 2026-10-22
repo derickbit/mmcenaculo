@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  19 passed (19)
-      Tests  234 passed (234)
+ Test Files  20 passed (20)
+      Tests  240 passed (240)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -284,6 +284,24 @@ O cookie de login (a "sessão") guarda o **identificador da conta**, o momento e
 - **Só o ADMIN:** `exigirAdmin` (ações) barra a coordenação; `exigirAdminPagina` leva a coordenação de volta ao painel e quem não entrou
   ao login.
 
+### 16. Painel escondido: `proxy.test.ts` (6 testes, sem banco)
+
+O proxy é a primeira porta do painel (`/painelmmc`). Ele confere só o cookie; a conferência completa, no banco, é feita em cada página
+e em cada ação.
+
+- **Sem sessão, o painel finge que não existe:** qualquer endereço do painel (menos a tela de login) responde "não encontrado", igual a
+  um endereço que nunca existiu, e **não redireciona ao login**. Assim, quem digita um endereço do painel não descobre que ele existe.
+  Só a tela de login (`/painelmmc/login`) se mostra. Foi conferido com o site compilado: a resposta é idêntica, byte a byte, à de uma
+  rota inexistente.
+- Cookie falso, vazio ou **adulterado** (trocar a conta dentro dele) é tratado como sem sessão.
+- Com sessão válida, o painel abre.
+- Senha provisória: só a tela de troca de senha; quem já trocou volta ao painel.
+- **Fora dos buscadores:** as páginas e a API do painel mandam o cabeçalho `X-Robots-Tag: noindex, nofollow`. (Não se usa o
+  `robots.txt` de propósito: ele anunciaria o endereço do painel.) As páginas públicas não recebem esse cabeçalho.
+
+Efeito a ter em mente: quem estiver deslogado e abrir um endereço salvo do painel (por exemplo `/painelmmc`) vê "não encontrado"; o
+caminho de entrada é `/painelmmc/login` (é para onde o cadeado do rodapé aponta).
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,
@@ -337,7 +355,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 234 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 240 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
