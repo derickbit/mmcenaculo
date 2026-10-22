@@ -1,11 +1,14 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import FiltroEspera from "./FiltroEspera";
-import { exigirSessao } from "@/lib/auth";
+import { exigirSessao, exigirSessaoPagina } from "@/lib/auth";
 
 export const revalidate = 0;
 
 export default async function EsperaPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
+  // A página mostra dados da coordenação: confere a sessão no banco (conta ativa), sem depender só do proxy.
+  await exigirSessaoPagina();
+
   // Lê a URL para saber se tem algum filtro aplicado
   const resolvedParams = await searchParams;
   const tipoFiltro = resolvedParams.tipo || "";

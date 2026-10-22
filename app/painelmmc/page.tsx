@@ -3,11 +3,14 @@ import FiltroEventos from "./FiltroEventos";
 import BotaoExportar from "./BotaoExportar";
 import TabelaInscritos from "./TabelaInscritos"; // IMPORTAÇÃO NOVA
 import { revalidatePath } from "next/cache";
-import { exigirSessao } from "@/lib/auth";
+import { exigirSessao, exigirSessaoPagina } from "@/lib/auth";
 
 export const revalidate = 0;
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ eventoId?: string }> }) {
+  // A página mostra dados da coordenação: confere a sessão no banco (conta ativa), sem depender só do proxy.
+  await exigirSessaoPagina();
+
   const resolvedParams = await searchParams;
 
   const eventos = await prisma.evento.findMany({

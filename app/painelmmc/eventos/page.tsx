@@ -4,11 +4,14 @@ import Link from "next/link";
 import StatusDropdown from "./StatusDropdown"
 import BotaoDeletar from "../BotaoDeletar";
 import FormNovoEvento from "./FormNovoEvento"; // 🔴 IMPORTAMOS O NOVO FORMULÁRIO
-import { exigirSessao } from "@/lib/auth";
+import { exigirSessao, exigirSessaoPagina } from "@/lib/auth";
 
 export const revalidate = 0;
 
 export default async function EventosPage() {
+  // A página mostra dados da coordenação: confere a sessão no banco (conta ativa), sem depender só do proxy.
+  await exigirSessaoPagina();
+
   const eventos = await prisma.evento.findMany({
     orderBy: { criadoEm: 'desc' }
   });

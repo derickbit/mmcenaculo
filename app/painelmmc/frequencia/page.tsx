@@ -1,11 +1,14 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import PainelAbasFrequencia from "./PainelAbasFrequencia";
-import { exigirSessao } from "@/lib/auth";
+import { exigirSessao, exigirSessaoPagina } from "@/lib/auth";
 
 export const revalidate = 0;
 
 export default async function FrequenciaPage() {
+  // A página mostra dados da coordenação: confere a sessão no banco (conta ativa), sem depender só do proxy.
+  await exigirSessaoPagina();
+
   const membros = await prisma.membro.findMany({
     orderBy: { nome: 'asc' },
     include: { 

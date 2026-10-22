@@ -2,11 +2,14 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Image from "next/image";
 import UploaderImagens from "./UploaderImagens";
-import { exigirSessao } from "@/lib/auth";
+import { exigirSessao, exigirSessaoPagina } from "@/lib/auth";
 
 export const revalidate = 0;
 
 export default async function AdminGaleriaPage() {
+  // A página mostra dados da coordenação: confere a sessão no banco (conta ativa), sem depender só do proxy.
+  await exigirSessaoPagina();
+
   const eventos = await prisma.evento.findMany({
     orderBy: { dataInicio: 'desc' },
     include: { fotos: { orderBy: { criadoEm: 'desc' } } }
