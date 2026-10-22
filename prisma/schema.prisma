@@ -155,9 +155,13 @@ model Usuario {
   nome           String   @unique
   senha          String
   primeiroAcesso Boolean  @default(true) // 🔴 NOVO: Todo usuário nasce precisando trocar a senha
+  papel          String   @default("COORDENACAO") // ADMIN (gere contas) ou COORDENACAO; os dois veem todos os dados
+  ativo          Boolean  @default(true) // conta desativada não entra
   criadoEm       DateTime @default(now())
 
   observacoes    Observacao[]
+  convitesCriados Convite[] @relation("ConviteCriador")
+  convite         Convite?  @relation("ConviteUsuario") // o convite que criou esta conta (se houve)
 }
 
 // Contador de tentativas por chave (ex.: "inscricao:203.0.113.5") dentro de uma janela de tempo.
@@ -166,4 +170,23 @@ model LimiteTentativa {
   chave        String   @id
   janelaInicio DateTime
   contagem     Int
+}
+
+// Convite para criar uma conta do painel: link de uso único, com validade. O admin escolhe o usuário; quem aceita só
+// define a senha. Só o hash do código fica no banco (o código em si aparece uma única vez, para o admin copiar).
+// Um convite sempre cria uma conta COORDENACAO; ADMIN só nasce pelo script do primeiro admin.
+model Convite {
+  id          String    @id @default(uuid())
+  codigoHash  String    @unique // sha256 do código
+  nomeUsuario String    // usuário reservado pelo admin
+  criadoEm    DateTime  @default(now())
+  expiraEm    DateTime
+  usadoEm     DateTime?
+  revogadoEm  DateTime?
+
+  criadoPorId String
+  criadoPor   Usuario   @relation("ConviteCriador", fields: [criadoPorId], references: [id])
+
+  usadoPorId  String?   @unique
+  usadoPor    Usuario?  @relation("ConviteUsuario", fields: [usadoPorId], references: [id])
 }

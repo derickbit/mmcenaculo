@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  13 passed (13)
-      Tests  154 passed (154)
+ Test Files  15 passed (15)
+      Tests  192 passed (192)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -200,6 +200,33 @@ voltou** para conferir o conteúdo.
 - **Frequência:** entrega os membros com as presenças, e filtra por grupo.
 - Evento inexistente e relatório desconhecido dão 404.
 
+### 13. Convites para contas do painel: `lib/convite-regras.test.ts` (24 testes, sem banco) e `lib/convite.test.ts` (14 testes, com banco)
+
+O admin gera um **link de uso único** para uma pessoa criar a conta dela: ele escolhe o **usuário** e a pessoa só define a senha.
+
+*Regras sem banco* (`lib/convite-regras.ts`):
+
+- O **código do link** é aleatório (256 bits), nunca se repete e só usa caracteres seguros para um link. No banco fica apenas o **hash**
+  do código.
+- **Usuário** reservado: 3 a 30 caracteres, só letras sem acento, números, ponto, hífen e sublinhado.
+- **Senha:** no mínimo 10 caracteres e, no máximo, 72 *bytes* (o bcrypt ignoraria o resto em silêncio).
+- O convite vale **48 horas** e vence exatamente na hora marcada; "usado" e "revogado" valem mais que o prazo.
+
+*Com banco* (`lib/convite.ts`):
+
+- **Criar:** o código aparece só no retorno; o banco guarda o hash (o teste confirma que o código não está em nenhum campo). Recusa
+  usuário inválido, usuário que já existe (**sem diferenciar maiúsculas de minúsculas**) e um segundo convite pendente para o mesmo
+  usuário (que volta a ser possível depois de revogar ou de vencer).
+- **Aceitar:** cria a conta **COORDENACAO**, ativa, com a senha em hash, e marca o convite como usado. O mesmo link não funciona duas
+  vezes; convite vencido, revogado ou com código errado não cria nada.
+- **Senha fraca** é recusada e o convite continua livre para tentar de novo. Se o usuário foi ocupado no meio do caminho, a conta não é
+  criada e o convite **não é gasto** (a transação é desfeita).
+- **Vários cliques ao mesmo tempo** no mesmo link criam, no máximo, uma conta.
+- **Revogar:** só convites livres (não os já usados nem os já revogados).
+
+Há duas proteções sobrepostas contra reuso de convite (a checagem do estado e a condição dentro da transação). Foi confirmado que os
+testes falham se **as duas** forem removidas.
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,
@@ -253,7 +280,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 154 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 192 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
