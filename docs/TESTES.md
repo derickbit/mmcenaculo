@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  11 passed (11)
-      Tests  129 passed (129)
+ Test Files  12 passed (12)
+      Tests  140 passed (140)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -154,6 +154,33 @@ que aparece na tela**, para adulto, Kids e lista de espera.
 
 Esses testes não precisam de banco.
 
+### 11. Planilhas exportadas: `lib/planilha.test.ts` (11 testes, sem banco)
+
+Testam `lib/planilha.ts`, que monta as planilhas `.xlsx` do painel: inscritos adultos, inscritos Kids e frequência.
+
+- **O conteúdo:** cabeçalho em negrito e uma linha por inscrição, com os dados como foram digitados; `-` nos campos vazios; notas
+  internas juntas com ` | `; número de colunas igual ao do cabeçalho.
+- **Datas sem erro de fuso:** a data de nascimento não anda um dia, e a hora da inscrição aparece no horário de Brasília mesmo com o
+  servidor em UTC (a Vercel).
+- **Kids:** idade **na data do evento**, aviso "fora da faixa 8-10", saúde como texto, como "Falar com a equipe no dia" ou `-`, e o
+  parentesco por extenso ("Mãe").
+
+**O teste de segurança (importante).** Um texto digitado no formulário público como `=HYPERLINK("http://golpe.example","clique")`,
+`=1+1`, `@SUM(1,2)`, `+55 53 99999-9999` ou `-2+3` poderia ser executado por um programa de planilha **se** fosse gravado como
+fórmula. O teste gera uma planilha com todos esses textos, **abre o arquivo `.xlsx` por dentro** (ele é um zip; o teste tem um
+leitor mínimo, sem bibliotecas) e confere três coisas:
+
+1. não existe nenhuma célula de fórmula no arquivo (a marca `<f>`);
+2. toda célula é do tipo **texto**;
+3. o conteúdo está lá **exatamente como foi digitado** (os dados não são alterados, nada de apóstrofo na frente).
+
+Isso vale para as três planilhas. Foi confirmado que o teste **falha** se uma célula virar fórmula de verdade.
+
+*Por que não "neutralizamos" os dados:* o conselho comum de colocar um `'` na frente de textos que começam com `=`, `+`, `-` ou `@`
+vale para arquivos **CSV**. Num `.xlsx`, texto é gravado como texto, e só vira fórmula se o código pedir de propósito. Colocar o
+apóstrofo estragaria dados de verdade (por exemplo, um telefone começando com `+55`) para evitar um risco que não existe. O teste
+acima é a garantia no lugar disso: se uma troca futura de biblioteca mudar esse comportamento, ele avisa.
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,
@@ -207,7 +234,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 129 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 140 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
