@@ -2,6 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import { listaParoquias } from "@/lib/paroquias";
+import { CampoIsca, useAberturaDoFormulario } from "./antiRobo";
+import { CAMPO_ABERTURA } from "@/lib/honeypot";
+import { mascararTelefone, telefoneValido } from "@/lib/telefone";
 
 // Aqui está a correção: A função agora recebe as variáveis corretamente!
 export default function Formulario({ 
@@ -21,12 +24,13 @@ export default function Formulario({
   const [jaFezCenaculo, setJaFezCenaculo] = useState("Não");
   const [qualCenaculo, setQualCenaculo] = useState("");
 
+  const abertura = useAberturaDoFormulario();
+  const [erros, setErros] = useState<Record<string, string>>({});
+  const [mensagem, setMensagem] = useState("");
+
   const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 11) value = value.slice(0, 11);
-    if (value.length > 2) value = `(${value.slice(0,2)}) ${value.slice(2)}`;
-    if (value.length > 10) value = `${value.slice(0,10)}-${value.slice(10)}`;
-    setTelefone(value);
+    setTelefone(mascararTelefone(e.target.value));
+    setErros((atual) => ({ ...atual, telefone: "" }));
   };
 
   const handleDate = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,28 +39,32 @@ export default function Formulario({
     if (value.length > 2) value = `${value.slice(0,2)}/${value.slice(2)}`;
     if (value.length > 5) value = `${value.slice(0,5)}/${value.slice(5)}`;
     setDataNascimento(value);
+    setErros((atual) => ({ ...atual, dataNascimento: "" }));
   };
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMensagem("");
+
+    // Confere antes de enviar o que dá para conferir: a pessoa corrige só o campo errado, sem digitar tudo de novo.
+    const novosErros: Record<string, string> = {};
+    if (!telefoneValido(telefone)) novosErros.telefone = "Telefone inválido. Use DDD + número.";
+    const partesData = dataNascimento.split("/");
+    if (partesData.length !== 3 || partesData[2].length !== 4) novosErros.dataNascimento = "Informe a data no formato DD/MM/AAAA.";
+    setErros(novosErros);
+    if (Object.keys(novosErros).length > 0) return;
+
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
-    
+
     // Injeta o ID do evento atual para o backend saber onde salvar
     data.eventoId = eventoId;
-    
-    if (jaFezCenaculo === "Sim") {
-      data.jaFezCenaculo = `Fez o ${qualCenaculo}º`;
-    } else {
-      data.jaFezCenaculo = "Não fez";
-    }
+    data[CAMPO_ABERTURA] = String(abertura.current); // momento em que o formulário foi aberto (proteção contra robôs)
 
-    const partesData = dataNascimento.split('/');
-    if (partesData.length === 3) {
-      data.dataNascimento = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
-    }
+    data.jaFezCenaculo = jaFezCenaculo === "Sim" ? `Fez o ${qualCenaculo}º` : "Não fez";
+    data.dataNascimento = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
 
     try {
       const response = await fetch('/api/inscricao', {
@@ -65,15 +73,16 @@ export default function Formulario({
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
-      
+      const result = await response.json().catch(() => ({}));
+
       if (response.ok) {
         setSucesso(true);
       } else {
-        alert(result.error || "Ops! Houve um erro ao salvar sua inscrição.");
+        setErros(result.campos ?? {});
+        setMensagem(result.error || "Ops! Houve um erro ao salvar sua inscrição.");
       }
     } catch {
-      alert("Erro de conexão. Tente novamente.");
+      setMensagem("Erro de conexão. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -91,6 +100,13 @@ export default function Formulario({
     );
   }
 
+  const erro = (nome: string) =>
+    erros[nome] ? (
+      <p role="alert" className="mt-1 text-sm text-red-600">
+        {erros[nome]}
+      </p>
+    ) : null;
+
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg border-t-8 border-cenaculo-blue">
       <div className="text-center mb-8">
@@ -100,14 +116,22 @@ export default function Formulario({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <CampoIsca />
+        {mensagem && (
+          <div role="alert" className="p-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">
+            {mensagem}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Nome Completo *</label>
             <input type="text" name="nomeCompleto" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold" />
+            {erro("nomeCompleto")}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">E-mail *</label>
             <input type="email" name="email" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold" />
+            {erro("email")}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Instagram</label>
@@ -116,14 +140,17 @@ export default function Formulario({
           <div>
             <label className="block text-sm font-medium text-gray-700">Telefone (WhatsApp) *</label>
             <input type="text" name="telefone" required value={telefone} onChange={handlePhone} placeholder="(00) 00000-0000" className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold" />
+            {erro("telefone")}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Cidade *</label>
             <input type="text" name="cidade" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold" />
+            {erro("cidade")}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Data de Nascimento *</label>
             <input type="text" value={dataNascimento} onChange={handleDate} placeholder="DD/MM/AAAA" required className="mt-1 block w-full p-3 border border-gray-300 rounded-md focus:ring-cenaculo-gold" />
+            {erro("dataNascimento")}
           </div>
         </div>
 

@@ -20,12 +20,15 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
   let kidsId: string; // evento Kids aberto
   const eventosCriados: string[] = [];
 
-  const enviar = (corpo: unknown) =>
+  // Cada envio vem de um IP diferente (para não esbarrar no limite de tentativas), a não ser que o teste escolha um.
+  let ipN = 0;
+  const enviar = (corpo: unknown, ip = `ip-${sufixo}-${++ipN}`) =>
     POST(
       new Request("http://localhost/api/inscricao", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: typeof corpo === "string" ? corpo : JSON.stringify(corpo),
+        headers: { "Content-Type": "application/json", "x-forwarded-for": ip },
+        // Como os formulários reais: mandam o horário em que foram abertos (aqui, há 10 segundos).
+        body: typeof corpo === "string" ? corpo : JSON.stringify({ abertoEm: String(Date.now() - 10_000), ...(corpo as object) }),
       })
     );
 
@@ -74,6 +77,7 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
   afterAll(async () => {
     // Apagar o evento leva junto as inscrições (cascata).
     await prisma.evento.deleteMany({ where: { id: { in: eventosCriados } } });
+    await prisma.limiteTentativa.deleteMany({ where: { chave: { startsWith: `inscricao:ip-${sufixo}-` } } });
     await prisma.$disconnect();
   });
 
@@ -181,6 +185,78 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
         crianca({ criancaNome: "Pequeno", criancaNascimento: `${new Date().getUTCFullYear() - 5}-03-10` })
       );
       expect(resposta.status).toBe(201);
+    });
+  });
+
+  describe("limite de tentativas", () => {
+    it("a 11ª tentativa do mesmo IP é recusada (429) sem gravar nada; outro IP continua liberado", async () => {
+      const ip = `ip-${sufixo}-limite`;
+      for (let i = 0; i < 10; i++) expect((await enviar(adulto(abertoId), ip)).status).toBe(201);
+
+      const entrada = adulto(abertoId);
+      const recusada = await enviar(entrada, ip);
+      expect(recusada.status).toBe(429);
+      expect(Number(recusada.headers.get("Retry-After"))).toBeGreaterThan(0);
+      expect((await recusada.json()).error).toMatch(/Muitas tentativas/);
+      expect(await prisma.inscricao.count({ where: { email: entrada.email } })).toBe(0);
+
+      expect((await enviar(entrada, `ip-${sufixo}-outro`)).status).toBe(201);
+    });
+
+    it("envios inválidos também contam para o limite", async () => {
+      const ip = `ip-${sufixo}-invalidos`;
+      for (let i = 0; i < 10; i++) expect((await enviar(adulto(abertoId, { email: "ruim" }), ip)).status).toBe(400);
+      expect((await enviar(adulto(abertoId), ip)).status).toBe(429);
+    });
+  });
+
+  describe("proteção contra robôs (honeypot)", () => {
+    const respostaDeSucesso = { message: "Inscrição realizada com sucesso!" };
+
+    it("campo escondido preenchido: responde como sucesso, mas não grava nada", async () => {
+      const entrada = adulto(abertoId, { website: "http://spam.example" });
+      const resposta = await enviar(entrada);
+      expect(resposta.status).toBe(201);
+      expect(await resposta.json()).toEqual(respostaDeSucesso);
+      expect(await prisma.inscricao.count({ where: { email: entrada.email } })).toBe(0);
+    });
+
+    it("formulário enviado depressa demais (menos de 1 segundo): responde como sucesso, mas não grava", async () => {
+      const entrada = adulto(abertoId, { abertoEm: String(Date.now() - 500) });
+      const resposta = await enviar(entrada);
+      expect(resposta.status).toBe(201);
+      expect(await resposta.json()).toEqual(respostaDeSucesso);
+      expect(await prisma.inscricao.count({ where: { email: entrada.email } })).toBe(0);
+    });
+
+    it("sem o horário de abertura (envio direto, sem o formulário): responde como sucesso, mas não grava", async () => {
+      const entrada = adulto(abertoId);
+      const resposta = await POST(
+        new Request("http://localhost/api/inscricao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-forwarded-for": `ip-${sufixo}-direto` },
+          body: JSON.stringify(entrada),
+        })
+      );
+      expect(resposta.status).toBe(201);
+      expect(await prisma.inscricao.count({ where: { email: entrada.email } })).toBe(0);
+    });
+
+    it("o Kids também descarta o robô, e os campos da proteção não derrubam o cadastro de verdade", async () => {
+      const robo = crianca({ criancaNome: "Robo", website: "x" });
+      expect((await enviar(robo)).status).toBe(201);
+      expect(await prisma.inscricaoKids.count({ where: { eventoId: kidsId, criancaNome: "Robo" } })).toBe(0);
+
+      // Uma criança de verdade, com o campo escondido vazio, como o formulário manda
+      const real = crianca({ criancaNome: "Gente", website: "" });
+      expect((await enviar(real)).status).toBe(201);
+      expect(await prisma.inscricaoKids.count({ where: { eventoId: kidsId, criancaNome: "Gente" } })).toBe(1);
+    });
+
+    it("o robô ainda gasta as tentativas do limite", async () => {
+      const ip = `ip-${sufixo}-robo`;
+      for (let i = 0; i < 10; i++) expect((await enviar(adulto(abertoId, { website: "x" }), ip)).status).toBe(201);
+      expect((await enviar(adulto(abertoId), ip)).status).toBe(429);
     });
   });
 });

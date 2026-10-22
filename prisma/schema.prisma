@@ -159,3 +159,11 @@ model Usuario {
 
   observacoes    Observacao[]
 }
+
+// Contador de tentativas por chave (ex.: "inscricao:203.0.113.5") dentro de uma janela de tempo.
+// Serve para limitar abuso (inscrição, pré-cadastro, login). Ver lib/limite.ts.
+model LimiteTentativa {
+  chave        String   @id
+  janelaInicio DateTime
+  contagem     Int
+}

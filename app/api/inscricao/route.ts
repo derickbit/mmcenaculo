@@ -3,6 +3,9 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getStatusReal } from "@/lib/eventos";
 import { inscricaoAdultoSchema, inscricaoKidsSchema, validar } from "@/lib/inscricao";
+import { LIMITES, limitar, mensagemLimite } from "@/lib/limite";
+import { ipDoCliente } from "@/lib/ip";
+import { CAMPO_ABERTURA, CAMPO_ISCA, pareceRobo } from "@/lib/honeypot";
 
 const erro = (status: number, mensagem: string, extra?: Record<string, unknown>) =>
   NextResponse.json({ error: mensagem, ...extra }, { status });
@@ -22,6 +25,25 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Limite de tentativas por IP (cada envio conta, certo ou errado)
+    const limite = await limitar(`inscricao:${ipDoCliente(request.headers)}`, LIMITES.inscricao.maximo, LIMITES.inscricao.janelaSegundos);
+    if (!limite.permitido) {
+      return NextResponse.json(
+        { error: mensagemLimite(limite.tentarEmSegundos) },
+        { status: 429, headers: { "Retry-After": String(limite.tentarEmSegundos) } }
+      );
+    }
+
+    // Robô (campo escondido preenchido, ou formulário enviado depressa demais): finge que deu certo e descarta.
+    const enviado = corpo as Record<string, unknown>;
+    if (pareceRobo(enviado, { exigirAbertura: true })) {
+      return NextResponse.json({ message: "Inscrição realizada com sucesso!" }, { status: 201 });
+    }
+    // Os campos da proteção não fazem parte da inscrição: saem antes da validação.
+    const dados = { ...enviado };
+    delete dados[CAMPO_ISCA];
+    delete dados[CAMPO_ABERTURA];
+
     // 2. O evento precisa existir
     const evento = await prisma.evento.findUnique({ where: { id: eventoId } });
     if (!evento) return erro(404, "Evento não encontrado.");
@@ -33,7 +55,7 @@ export async function POST(request: Request) {
 
     // 4. Validação, com regras diferentes para Kids e adulto
     if (evento.tipo === "KIDS") {
-      const r = validar(inscricaoKidsSchema, corpo);
+      const r = validar(inscricaoKidsSchema, dados);
       if (!r.ok) return erro(400, `Confira os dados informados: ${Object.values(r.erros)[0]}`, { campos: r.erros });
 
       // 5. Gravação com campos explícitos: só entra o que foi combinado. O aceite (LGPD) é datado pelo servidor.
@@ -52,7 +74,7 @@ export async function POST(request: Request) {
         },
       });
     } else {
-      const r = validar(inscricaoAdultoSchema, corpo);
+      const r = validar(inscricaoAdultoSchema, dados);
       if (!r.ok) return erro(400, `Confira os dados informados: ${Object.values(r.erros)[0]}`, { campos: r.erros });
 
       await prisma.inscricao.create({ data: { ...r.dados, eventoId: evento.id } });

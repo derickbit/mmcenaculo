@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   inscricaoAdultoSchema,
   inscricaoKidsSchema,
+  preCadastroSchema,
   validar,
   idadeEm,
   foraDaFaixaKids,
@@ -186,5 +187,34 @@ describe("idade e faixa do Kids", () => {
     expect(foraDaFaixaKids(new Date("2016-11-10T00:00:00Z"), evento)).toBe(false); // 10 no dia
     expect(foraDaFaixaKids(new Date("2015-11-11T00:00:00Z"), evento)).toBe(false); // 10 (faz 11 amanhã)
     expect(foraDaFaixaKids(new Date("2015-11-10T00:00:00Z"), evento)).toBe(true); // 11 no dia
+  });
+});
+
+describe("lista de espera (pré-cadastro)", () => {
+  const pre = { nome: "Maria da Silva", email: "maria@email.com", telefone: "53999999999", tipo: "CENACULO" };
+
+  it("aceita um cadastro completo e normaliza o e-mail", () => {
+    const r = validar(preCadastroSchema, { ...pre, nome: "  Maria   da Silva ", email: " MARIA@Email.com " });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.dados.nome).toBe("Maria da Silva");
+    expect(r.dados.email).toBe("maria@email.com");
+  });
+
+  it("só aceita os retiros da lista", () => {
+    for (const tipo of ["CENACULO", "KIDS", "CENACULAO"]) expect(validar(preCadastroSchema, { ...pre, tipo }).ok).toBe(true);
+    for (const tipo of ["FESTIVIDADE", "qualquer coisa", ""]) expect(validar(preCadastroSchema, { ...pre, tipo }).ok).toBe(false);
+  });
+
+  it("exige nome, e-mail e telefone, e limita o tamanho", () => {
+    expect(validar(preCadastroSchema, {}).ok).toBe(false);
+    expect(validar(preCadastroSchema, { ...pre, email: "não é e-mail" }).ok).toBe(false);
+    expect(validar(preCadastroSchema, { ...pre, telefone: "123" }).ok).toBe(false);
+    expect(validar(preCadastroSchema, { ...pre, nome: "x".repeat(121) }).ok).toBe(false);
+  });
+
+  it("aceita o telefone com o código do país (55)", () => {
+    expect(validar(preCadastroSchema, { ...pre, telefone: "+55 53 99999-9999" }).ok).toBe(true);
+    expect(validar(preCadastroSchema, { ...pre, telefone: "55 53 3333-4444" }).ok).toBe(true);
   });
 });

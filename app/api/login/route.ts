@@ -3,6 +3,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { COOKIE_SESSAO, criarToken, opcoesCookieSessao } from "@/lib/session";
+import { LIMITES, estaBloqueado, limpar, mensagemLimite, registrarTentativa } from "@/lib/limite";
+import { ipDoCliente } from "@/lib/ip";
 
 // Hash descartável: gasta o mesmo tempo quando o usuário não existe,
 // para não revelar quais usuários estão cadastrados.
@@ -22,6 +24,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
     }
 
+    // Bloqueio temporário depois de várias senhas erradas, por IP e por nome digitado (exista ou não o usuário,
+    // para não revelar quais usuários existem).
+    const { maximo, janelaSegundos } = LIMITES.loginFalhas;
+    const chaveIp = `login:ip:${ipDoCliente(request.headers)}`;
+    const chaveUsuario = `login:user:${nome.trim().toLowerCase().slice(0, 64)}`;
+    const [porIp, porUsuario] = await Promise.all([
+      estaBloqueado(chaveIp, maximo, janelaSegundos),
+      estaBloqueado(chaveUsuario, maximo, janelaSegundos),
+    ]);
+    if (!porIp.permitido || !porUsuario.permitido) {
+      const espera = Math.max(porIp.tentarEmSegundos, porUsuario.tentarEmSegundos);
+      return NextResponse.json(
+        { error: mensagemLimite(espera) },
+        { status: 429, headers: { "Retry-After": String(espera) } }
+      );
+    }
+
     const usuario = await prisma.usuario.findUnique({ where: { nome } });
 
     let senhaValida = false;
@@ -37,10 +56,12 @@ export async function POST(request: Request) {
     }
 
     if (!usuario || !senhaValida) {
+      await Promise.all([registrarTentativa(chaveIp, janelaSegundos), registrarTentativa(chaveUsuario, janelaSegundos)]);
       // Mesma mensagem nos dois casos.
       return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
     }
 
+    await limpar(chaveUsuario); // login certo zera as falhas desse usuário
     const token = await criarToken(usuario.nome, usuario.primeiroAcesso);
 
     const response = NextResponse.json(

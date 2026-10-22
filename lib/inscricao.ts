@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PARENTESCOS, idadeEm } from "./kids";
+import { telefoneValido } from "./telefone";
 
 // As constantes e o cálculo de idade ficam em lib/kids.ts (sem zod); são reexportados aqui por conveniência.
 export { PARENTESCOS, FAIXA_KIDS, idadeEm, foraDaFaixaKids } from "./kids";
@@ -44,7 +45,7 @@ const email = (rotulo: string) =>
     .pipe(z.email(`${rotulo} inválido.`).max(254, `${rotulo}: máximo de 254 caracteres.`));
 
 const telefone = (rotulo: string) =>
-  obrigatorio(rotulo, 20).refine((t) => [10, 11].includes(t.replace(/\D/g, "").length), `${rotulo} inválido. Use DDD + número.`);
+  obrigatorio(rotulo, 20).refine((t) => telefoneValido(t), `${rotulo} inválido. Use DDD + número.`);
 
 const dataNascimento = (rotulo: string) =>
   z
@@ -106,6 +107,17 @@ export const inscricaoKidsSchema = z
   })
   // Quem prefere falar com a equipe não registra o texto de saúde.
   .transform((d) => ({ ...d, saudeObservacao: d.saudeComEquipe ? undefined : d.saudeObservacao }));
+
+// ---------- lista de espera (pré-cadastro) ----------
+
+export const TIPOS_PRE_CADASTRO = ["CENACULO", "KIDS", "CENACULAO"] as const;
+
+export const preCadastroSchema = z.object({
+  nome: obrigatorio("Nome", 120),
+  email: email("E-mail"),
+  telefone: telefone("Telefone"),
+  tipo: z.enum(TIPOS_PRE_CADASTRO, { error: "Selecione o retiro." }),
+});
 
 // ---------- resultado ----------
 
