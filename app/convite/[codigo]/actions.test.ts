@@ -60,7 +60,7 @@ describe.skipIf(!urlTeste)("aceitar convite pela página (banco de testes)", () 
     convites = await import("@/lib/convite");
     sessao = await import("@/lib/session");
     aceitar = (await import("./actions")).aceitarConviteAction;
-    adminId = (await prisma.usuario.create({ data: { nome: `admin-${sufixo}`, senha: "x", papel: "ADMIN", primeiroAcesso: false } })).id;
+    adminId = (await prisma.usuario.create({ data: { nome: `admin-${sufixo}`, senha: "x", papel: "ADMIN" } })).id;
   });
 
   afterAll(async () => {
@@ -82,7 +82,6 @@ describe.skipIf(!urlTeste)("aceitar convite pela página (banco de testes)", () 
     const dados = await sessao.verificarToken(cookiesGravados[0].valor);
     expect(cookiesGravados[0].nome).toBe(sessao.COOKIE_SESSAO);
     expect(dados?.sub).toBe(conta.id); // o cookie guarda o identificador da conta, não o nome
-    expect(dados?.pa).toBe(false); // sem pendência de troca de senha
   });
 
   it("senhas diferentes: avisa ao lado do campo e não gasta o convite", async () => {

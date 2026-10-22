@@ -140,7 +140,7 @@ export async function aceitarConvite(codigo: string, senha: string, agora: Date 
         const alvo = await tx.usuario.findUnique({ where: { id: convite.usuarioAlvoId }, select: { id: true, nome: true, ativo: true, papel: true } });
         if (!alvo || !alvo.ativo || alvo.papel === "ADMIN") throw new ContaIndisponivel(); // desfaz: o link não gasta
         // Derruba também qualquer sessão aberta desde que o link foi gerado.
-        await tx.usuario.update({ where: { id: alvo.id }, data: { senha: senhaCriptografada, sessoesValidasDesde: agora, primeiroAcesso: false } });
+        await tx.usuario.update({ where: { id: alvo.id }, data: { senha: senhaCriptografada, sessoesValidasDesde: agora } });
         return { ok: true, usuario: { id: alvo.id, nome: alvo.nome } };
       }
 
@@ -148,7 +148,7 @@ export async function aceitarConvite(codigo: string, senha: string, agora: Date 
       if (existente) throw new NomeEmUso(); // desfaz a transação: o convite continua livre
 
       const usuario = await tx.usuario.create({
-        data: { nome: convite.nomeUsuario, senha: senhaCriptografada, papel: "COORDENACAO", ativo: true, primeiroAcesso: false },
+        data: { nome: convite.nomeUsuario, senha: senhaCriptografada, papel: "COORDENACAO", ativo: true },
         select: { id: true, nome: true },
       });
       await tx.convite.update({ where: { id: convite.id }, data: { usadoPorId: usuario.id } });

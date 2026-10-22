@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createHash, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { COOKIE_SESSAO, criarToken, opcoesCookieSessao } from "@/lib/session";
@@ -9,12 +8,6 @@ import { ipDoCliente } from "@/lib/ip";
 // Hash descartável: gasta o mesmo tempo quando o usuário não existe,
 // para não revelar quais usuários estão cadastrados.
 const HASH_FALSO = bcrypt.hashSync("senha-invalida", 10);
-
-function iguaisEmTempoConstante(a: string, b: string): boolean {
-  const ha = createHash("sha256").update(a).digest();
-  const hb = createHash("sha256").update(b).digest();
-  return timingSafeEqual(ha, hb);
-}
 
 export async function POST(request: Request) {
   try {
@@ -47,11 +40,6 @@ export async function POST(request: Request) {
     if (!usuario || !usuario.ativo) {
       // Conta que não existe ou desativada: gasta o mesmo tempo e dá a mesma resposta de senha errada.
       await bcrypt.compare(senha, HASH_FALSO);
-    } else if (usuario.primeiroAcesso) {
-      // Senha provisória cadastrada à mão no banco (texto puro) ou já em hash.
-      senhaValida =
-        iguaisEmTempoConstante(senha, usuario.senha) ||
-        (await bcrypt.compare(senha, usuario.senha));
     } else {
       senhaValida = await bcrypt.compare(senha, usuario.senha);
     }
@@ -66,10 +54,10 @@ export async function POST(request: Request) {
     }
 
     await limpar(chaveUsuario); // login certo zera as falhas desse usuário
-    const token = await criarToken(usuario.id, usuario.primeiroAcesso);
+    const token = await criarToken(usuario.id);
 
     const response = NextResponse.json(
-      { message: "Login realizado com sucesso", primeiroAcesso: usuario.primeiroAcesso },
+      { message: "Login realizado com sucesso" },
       { status: 200 }
     );
     response.cookies.set(COOKIE_SESSAO, token, opcoesCookieSessao());

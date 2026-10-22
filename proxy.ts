@@ -16,16 +16,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/pagina-que-nao-existe", request.url));
   }
 
-  // Senha provisória: só pode acessar a tela de troca de senha.
-  if (sessao.pa && path !== "/painelmmc/setup") {
-    return NextResponse.redirect(new URL("/painelmmc/setup", request.url));
-  }
-
-  // Quem já trocou a senha não tem o que fazer no setup.
-  if (!sessao.pa && path === "/painelmmc/setup") {
-    return NextResponse.redirect(new URL("/painelmmc", request.url));
-  }
-
   return NextResponse.next();
 }
 

@@ -23,7 +23,7 @@ const notas = { include: { usuario: { select: { nome: true } } }, orderBy: { cri
 export async function GET(request: Request, { params }: { params: Promise<{ tipo: string }> }) {
   // Só quem está logado (e já trocou a senha provisória) baixa planilhas. O proxy não basta: confere-se aqui também.
   const sessao = await lerSessao();
-  if (!sessao || sessao.pa) return erro("Não autorizado", 401);
+  if (!sessao) return erro("Não autorizado", 401);
 
   const { tipo } = await params;
   const busca = new URL(request.url).searchParams;

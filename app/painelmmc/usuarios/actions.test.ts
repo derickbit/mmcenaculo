@@ -17,7 +17,7 @@ const { login } = vi.hoisted(() => ({ login: { atual: null as Quem } }));
 vi.mock("@/lib/auth", () => ({
   exigirAdmin: async () => {
     if (!login.atual || login.atual.papel !== "ADMIN") throw new Error("Não autorizado");
-    return { sub: login.atual.sub, nome: "admin", papel: "ADMIN", pa: false };
+    return { sub: login.atual.sub, nome: "admin", papel: "ADMIN" };
   },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -33,7 +33,7 @@ describe.skipIf(!urlTeste)("ações da tela de usuários (banco de testes)", () 
   const nome = () => `a${sufixo}x${++n}`;
 
   const novaConta = (extra: { ativo?: boolean; papel?: string } = {}) =>
-    prisma.usuario.create({ data: { nome: nome(), senha: bcrypt.hashSync(SENHA, 4), primeiroAcesso: false, ...extra } });
+    prisma.usuario.create({ data: { nome: nome(), senha: bcrypt.hashSync(SENHA, 4), ...extra } });
   const comoAdmin = () => {
     login.atual = { sub: adminId, papel: "ADMIN" };
   };
@@ -51,7 +51,7 @@ describe.skipIf(!urlTeste)("ações da tela de usuários (banco de testes)", () 
     prisma = (await import("@/lib/prisma")).default;
     acoes = await import("./actions");
     convites = await import("@/lib/convite");
-    adminId = (await prisma.usuario.create({ data: { nome: `admin-a${sufixo}`, senha: "x", papel: "ADMIN", primeiroAcesso: false } })).id;
+    adminId = (await prisma.usuario.create({ data: { nome: `admin-a${sufixo}`, senha: "x", papel: "ADMIN" } })).id;
   });
 
   afterAll(async () => {

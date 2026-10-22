@@ -8,7 +8,6 @@ export type SessaoValida = {
   sub: string; // identificador da conta
   nome: string;
   papel: string; // ADMIN ou COORDENACAO
-  pa: boolean; // true = ainda precisa trocar a senha provisória (sai na parte D)
 };
 
 // Lê a sessão do cookie, validando a assinatura e a expiração, e confere no banco que a conta ainda vale:
@@ -26,7 +25,7 @@ export async function lerSessao(): Promise<SessaoValida | null> {
   if (!usuario || !usuario.ativo) return null;
   if (token.iat < usuario.sessoesValidasDesde.getTime()) return null;
 
-  return { sub: usuario.id, nome: usuario.nome, papel: usuario.papel, pa: token.pa };
+  return { sub: usuario.id, nome: usuario.nome, papel: usuario.papel };
 }
 
 // Use no início de páginas do painel que mostram dados: sem sessão válida, vai para o login
@@ -34,7 +33,6 @@ export async function lerSessao(): Promise<SessaoValida | null> {
 export async function exigirSessaoPagina(): Promise<SessaoValida> {
   const sessao = await lerSessao();
   if (!sessao) redirect("/painelmmc/login");
-  if (sessao.pa) redirect("/painelmmc/setup");
   return sessao;
 }
 
@@ -46,10 +44,10 @@ export async function exigirAdminPagina(): Promise<SessaoValida> {
 }
 
 // Use no início de toda Server Action do painel admin.
-// Barra quem não está logado e quem ainda não trocou a senha provisória.
+// Barra quem não está logado (e conta desativada ou sessão derrubada: ver lerSessao).
 export async function exigirSessao(): Promise<SessaoValida> {
   const sessao = await lerSessao();
-  if (!sessao || sessao.pa) {
+  if (!sessao) {
     throw new Error("Não autorizado");
   }
   return sessao;

@@ -17,11 +17,10 @@ const codificar = (objeto: unknown) => Buffer.from(JSON.stringify(objeto)).toStr
 describe("cookie de sessão", () => {
   it("guarda o identificador da conta, quando foi emitido e quando vence", async () => {
     const antes = Date.now();
-    const token = await criarToken("id-da-conta-123", false);
+    const token = await criarToken("id-da-conta-123");
     const sessao = await verificarToken(token);
 
     expect(sessao?.sub).toBe("id-da-conta-123");
-    expect(sessao?.pa).toBe(false);
     expect(sessao!.iat).toBeGreaterThanOrEqual(antes);
     expect(sessao!.iat).toBeLessThanOrEqual(Date.now());
     expect(sessao!.exp - Math.floor(sessao!.iat / 1000)).toBe(DURACAO_SESSAO_SEGUNDOS);
@@ -34,20 +33,20 @@ describe("cookie de sessão", () => {
   });
 
   it("não aceita cookie adulterado (trocar a conta dentro do cookie invalida a assinatura)", async () => {
-    const [corpo, assinatura] = (await criarToken("conta-comum", false)).split(".");
+    const [corpo, assinatura] = (await criarToken("conta-comum")).split(".");
     const adulterado = codificar({ ...decodificar(corpo), sub: "conta-do-admin" });
     expect(await verificarToken(`${adulterado}.${assinatura}`)).toBeNull();
   });
 
   it("não aceita cookie assinado com outro segredo", async () => {
     process.env.SESSION_SECRET = "outro-segredo-completamente-diferente-0123456789";
-    const token = await criarToken("conta-comum", false);
+    const token = await criarToken("conta-comum");
     process.env.SESSION_SECRET = SEGREDO;
     expect(await verificarToken(token)).toBeNull();
   });
 
   it("não aceita cookie vencido", async () => {
-    const token = await criarToken("conta-comum", false);
+    const token = await criarToken("conta-comum");
     const agora = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(agora + (DURACAO_SESSAO_SEGUNDOS + 60) * 1000);
     expect(await verificarToken(token)).toBeNull();
@@ -61,15 +60,15 @@ describe("cookie de sessão", () => {
     };
     const exp = Math.floor(Date.now() / 1000) + 3600;
 
-    const comIat = await verificarToken(assinar({ sub: "conta", pa: false, iat: Date.now(), exp }));
+    const comIat = await verificarToken(assinar({ sub: "conta", iat: Date.now(), exp }));
     expect(comIat?.sub).toBe("conta"); // prova que a assinatura do teste está certa
 
-    expect(await verificarToken(assinar({ sub: "conta", pa: false, exp }))).toBeNull(); // sem iat: recusado
+    expect(await verificarToken(assinar({ sub: "conta", exp }))).toBeNull(); // sem iat: recusado
   });
 
   it("sem o segredo configurado, falha de forma explícita (não existe sessão segura sem ele)", async () => {
     delete process.env.SESSION_SECRET;
-    await expect(criarToken("conta", false)).rejects.toThrow(/SESSION_SECRET/);
+    await expect(criarToken("conta")).rejects.toThrow(/SESSION_SECRET/);
     process.env.SESSION_SECRET = SEGREDO;
   });
 });

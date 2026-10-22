@@ -30,13 +30,13 @@ describe.skipIf(!urlTeste)("sessão conferida no banco (banco de testes)", () =>
 
   const novaConta = async (extra: { papel?: string; ativo?: boolean; sessoesValidasDesde?: Date; nome?: string } = {}) => {
     const conta = await prisma.usuario.create({
-      data: { nome: extra.nome ?? `s${sufixo}x${++n}`, senha: "x", primeiroAcesso: false, papel: extra.papel ?? "COORDENACAO", ativo: extra.ativo ?? true, sessoesValidasDesde: extra.sessoesValidasDesde },
+      data: { nome: extra.nome ?? `s${sufixo}x${++n}`, senha: "x", papel: extra.papel ?? "COORDENACAO", ativo: extra.ativo ?? true, sessoesValidasDesde: extra.sessoesValidasDesde },
     });
     idsCriados.push(conta.id);
     return conta;
   };
-  const entrarComo = async (id: string, primeiroAcesso = false) => {
-    navegador.cookie = await sessao.criarToken(id, primeiroAcesso);
+  const entrarComo = async (id: string) => {
+    navegador.cookie = await sessao.criarToken(id);
   };
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe.skipIf(!urlTeste)("sessão conferida no banco (banco de testes)", () =>
     it("devolve a conta, o nome e o papel de quem está logado", async () => {
       const conta = await novaConta({ papel: "ADMIN" });
       await entrarComo(conta.id);
-      expect(await auth.lerSessao()).toEqual({ sub: conta.id, nome: conta.nome, papel: "ADMIN", pa: false });
+      expect(await auth.lerSessao()).toEqual({ sub: conta.id, nome: conta.nome, papel: "ADMIN" });
     });
 
     it("sem cookie, não há sessão", async () => {
@@ -124,12 +124,6 @@ describe.skipIf(!urlTeste)("sessão conferida no banco (banco de testes)", () =>
       await expect(auth.exigirSessao()).rejects.toThrow("Não autorizado");
     });
 
-    it("barra quem ainda está com a senha provisória", async () => {
-      const conta = await novaConta();
-      await entrarComo(conta.id, true);
-      await expect(auth.exigirSessao()).rejects.toThrow("Não autorizado");
-    });
-
     it("barra conta desativada", async () => {
       const conta = await novaConta({ ativo: false });
       await entrarComo(conta.id);
@@ -157,10 +151,5 @@ describe.skipIf(!urlTeste)("sessão conferida no banco (banco de testes)", () =>
       await expect(auth.exigirAdminPagina()).rejects.toThrow("REDIRECT:/painelmmc/login");
     });
 
-    it("exigirSessaoPagina leva quem está com senha provisória para a troca", async () => {
-      const conta = await novaConta();
-      await entrarComo(conta.id, true);
-      await expect(auth.exigirSessaoPagina()).rejects.toThrow("REDIRECT:/painelmmc/setup");
-    });
   });
 });

@@ -26,14 +26,7 @@ const response = await fetch('/api/login', {
       });
 
 if (response.ok) {
-        const data = await response.json();
-        
-        // 🔴 Se for primeiro acesso, manda para redefinir a senha!
-        if (data.primeiroAcesso) {
-          router.push('/painelmmc/setup');
-        } else {
-          router.push('/painelmmc');
-        }
+        router.push('/painelmmc');
         router.refresh();
       } else {
         const data = await response.json();

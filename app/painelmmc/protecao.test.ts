@@ -10,7 +10,6 @@ const RAIZ_API = path.join(process.cwd(), "app", "api", "painelmmc");
 
 const EXCECOES_DE_PAGINA: Record<string, string> = {
   "login/page.tsx": "tela pública de entrada",
-  "setup/page.tsx": "tem o próprio fluxo (conta com senha provisória) e sai na parte D",
 };
 
 function achar(dir: string, nomeDoArquivo: string): string[] {

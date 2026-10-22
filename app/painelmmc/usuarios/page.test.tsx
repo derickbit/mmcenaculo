@@ -31,7 +31,7 @@ describe("página /painelmmc/usuarios", () => {
   });
 
   it("o ADMIN vê a página com as contas e os convites", async () => {
-    vi.mocked(exigirAdminPagina).mockResolvedValue({ sub: "a", nome: "derick", papel: "ADMIN", pa: false });
+    vi.mocked(exigirAdminPagina).mockResolvedValue({ sub: "a", nome: "derick", papel: "ADMIN" });
     vi.mocked(listarUsuarios).mockResolvedValue([{ id: "1", nome: "derick", papel: "ADMIN", ativo: true, criadoEm: new Date() }]);
     vi.mocked(listarConvites).mockResolvedValue([]);
 

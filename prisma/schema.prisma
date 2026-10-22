@@ -154,7 +154,6 @@ model Usuario {
   id             String   @id @default(uuid())
   nome           String   @unique
   senha          String
-  primeiroAcesso Boolean  @default(true) // 🔴 NOVO: Todo usuário nasce precisando trocar a senha
   papel          String   @default("COORDENACAO") // ADMIN (gere contas) ou COORDENACAO; os dois veem todos os dados
   ativo          Boolean  @default(true) // conta desativada não entra
   // Sessões (cookies de login) emitidas antes desta data deixam de valer. Uma redefinição de senha avança esta data.

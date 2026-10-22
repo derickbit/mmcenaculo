@@ -32,7 +32,7 @@ describe.skipIf(!urlTeste)("convites (banco de testes)", () => {
     prisma = (await import("@/lib/prisma")).default;
     convite = await import("./convite");
     regras = await import("./convite-regras");
-    adminId = (await prisma.usuario.create({ data: { nome: `admin-${sufixo}`, senha: "x", papel: "ADMIN", primeiroAcesso: false } })).id;
+    adminId = (await prisma.usuario.create({ data: { nome: `admin-${sufixo}`, senha: "x", papel: "ADMIN" } })).id;
   });
 
   afterAll(async () => {
@@ -124,7 +124,6 @@ describe.skipIf(!urlTeste)("convites (banco de testes)", () => {
       const conta = await prisma.usuario.findUniqueOrThrow({ where: { nome: usuario } });
       expect(conta.papel).toBe("COORDENACAO");
       expect(conta.ativo).toBe(true);
-      expect(conta.primeiroAcesso).toBe(false);
       expect(conta.senha).not.toContain(SENHA);
       expect(await bcrypt.compare(SENHA, conta.senha)).toBe(true);
 
@@ -167,7 +166,7 @@ describe.skipIf(!urlTeste)("convites (banco de testes)", () => {
     it("se o usuário foi ocupado no meio do caminho, recusa sem gastar o convite", async () => {
       const usuario = nome();
       const { codigo } = await novo({ nomeUsuario: usuario });
-      await prisma.usuario.create({ data: { nome: usuario.toUpperCase(), senha: "x", primeiroAcesso: false } }); // alguém tomou o nome
+      await prisma.usuario.create({ data: { nome: usuario.toUpperCase(), senha: "x" } }); // alguém tomou o nome
 
       const r = await convite.aceitarConvite(codigo, SENHA);
       expect(r.ok === false && r.motivo).toBe("NOME_EM_USO");
@@ -201,7 +200,7 @@ describe.skipIf(!urlTeste)("convites (banco de testes)", () => {
     const SENHA_ANTIGA = "senha-antiga-123";
     const SENHA_NOVA = "senha-nova-boa-456";
     const novaConta = (extra: { ativo?: boolean; papel?: string } = {}) =>
-      prisma.usuario.create({ data: { nome: nome(), senha: bcrypt.hashSync(SENHA_ANTIGA, 4), primeiroAcesso: false, ...extra } });
+      prisma.usuario.create({ data: { nome: nome(), senha: bcrypt.hashSync(SENHA_ANTIGA, 4), ...extra } });
     const redefinir = async (usuarioId: string, agora?: Date) => {
       const r = await convite.criarRedefinicao({ usuarioId, criadoPorId: adminId, agora });
       if (!r.ok) throw new Error(`nao gerou o link: ${r.mensagem}`);

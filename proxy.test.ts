@@ -15,7 +15,6 @@ const pedido = (caminho: string, cookie?: string) =>
 
 const eNaoEncontrado = (r: Response) => (r.headers.get("x-middleware-rewrite") ?? "").endsWith("/pagina-que-nao-existe");
 const passa = (r: Response) => r.headers.get("x-middleware-next") === "1";
-const redirecionaPara = (r: Response) => (r.status === 307 ? new URL(r.headers.get("location") ?? "").pathname : null);
 
 describe("proxy do painel", () => {
   it("a tela de login é a única que aparece sem sessão", async () => {
@@ -23,7 +22,7 @@ describe("proxy do painel", () => {
   });
 
   it("sem sessão, qualquer outro endereço do painel finge que não existe (não encontrado, sem redirecionar ao login)", async () => {
-    for (const caminho of ["/painelmmc", "/painelmmc/eventos", "/painelmmc/kids", "/painelmmc/usuarios", "/painelmmc/setup", "/painelmmc/qualquer-coisa"]) {
+    for (const caminho of ["/painelmmc", "/painelmmc/eventos", "/painelmmc/kids", "/painelmmc/usuarios", "/painelmmc/qualquer-coisa"]) {
       const resposta = await proxy(pedido(caminho));
       expect(eNaoEncontrado(resposta), caminho).toBe(true);
       expect(resposta.headers.get("location")).toBeNull(); // nada de "vá para o login": não revela que existe um painel
@@ -34,26 +33,18 @@ describe("proxy do painel", () => {
     for (const cookie of ["abc.def", "lixo", "a.b.c"]) {
       expect(eNaoEncontrado(await proxy(pedido("/painelmmc", cookie))), cookie).toBe(true);
     }
-    const [corpo, assinatura] = (await criarToken("conta", false)).split(".");
+    const [corpo, assinatura] = (await criarToken("conta")).split(".");
     const outraConta = Buffer.from(JSON.stringify({ ...JSON.parse(Buffer.from(corpo, "base64url").toString()), sub: "outra" })).toString("base64url");
     expect(eNaoEncontrado(await proxy(pedido("/painelmmc", `${outraConta}.${assinatura}`)))).toBe(true);
   });
 
   it("com sessão válida, o painel abre", async () => {
-    const token = await criarToken("conta", false);
+    const token = await criarToken("conta");
     for (const caminho of ["/painelmmc", "/painelmmc/eventos", "/painelmmc/usuarios"]) {
       expect(passa(await proxy(pedido(caminho, token))), caminho).toBe(true);
     }
   });
 
-  it("senha provisória: só a tela de troca de senha; quem já trocou volta ao painel", async () => {
-    const provisoria = await criarToken("conta", true);
-    expect(redirecionaPara(await proxy(pedido("/painelmmc/eventos", provisoria)))).toBe("/painelmmc/setup");
-    expect(passa(await proxy(pedido("/painelmmc/setup", provisoria)))).toBe(true);
-
-    const normal = await criarToken("conta", false);
-    expect(redirecionaPara(await proxy(pedido("/painelmmc/setup", normal)))).toBe("/painelmmc");
-  });
 });
 
 describe("painel fora dos buscadores", () => {

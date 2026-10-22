@@ -11,7 +11,7 @@ if (urlTeste && !new URL(urlTeste).pathname.slice(1).endsWith("_test")) {
 }
 
 // A leitura da sessão do Next não existe fora do servidor: aqui escolhemos quem está logado em cada teste.
-type SessaoDeTeste = { sub: string; pa: boolean; exp: number } | null;
+type SessaoDeTeste = { sub: string; exp: number } | null;
 const { login } = vi.hoisted(() => ({ login: { atual: null as SessaoDeTeste } }));
 vi.mock("@/lib/auth", () => ({ lerSessao: async () => login.atual }));
 
@@ -26,7 +26,7 @@ describe.skipIf(!urlTeste)("exportação de planilhas (banco de testes)", () => 
   const eventos: string[] = [];
 
   const logado = () => {
-    login.atual = { sub: `teste-${sufixo}`, pa: false, exp: 9_999_999_999 };
+    login.atual = { sub: `teste-${sufixo}`, exp: 9_999_999_999 };
   };
   const baixar = (tipo: string, consulta = "") =>
     GET(new Request(`http://localhost/api/painelmmc/exportar/${tipo}${consulta}`), { params: Promise.resolve({ tipo }) });
@@ -57,7 +57,7 @@ describe.skipIf(!urlTeste)("exportação de planilhas (banco de testes)", () => 
     prisma = (await import("@/lib/prisma")).default;
     GET = (await import("./route")).GET;
 
-    usuarioId = (await prisma.usuario.create({ data: { nome: `teste-${sufixo}`, senha: "x", primeiroAcesso: false } })).id;
+    usuarioId = (await prisma.usuario.create({ data: { nome: `teste-${sufixo}`, senha: "x" } })).id;
 
     eventoAId = await novoEvento("Cenáculo A", "CENACULO");
     eventoBId = await novoEvento("Cenáculo B", "CENACULO");
@@ -106,10 +106,6 @@ describe.skipIf(!urlTeste)("exportação de planilhas (banco de testes)", () => 
       }
     });
 
-    it("com senha provisória ainda não trocada, também não", async () => {
-      login.atual = { sub: `teste-${sufixo}`, pa: true, exp: 9_999_999_999 };
-      expect((await baixar("inscritos")).status).toBe(401);
-    });
   });
 
   describe("inscritos adultos", () => {

@@ -16,7 +16,7 @@ vi.mock("@/lib/auth", () => ({
   // sub vazio = ninguém logado
   exigirSessao: async () => {
     if (!sessao.sub) throw new Error("Não autorizado");
-    return { sub: sessao.sub, pa: false, exp: 0 };
+    return { sub: sessao.sub, exp: 0 };
   },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -63,7 +63,7 @@ describe.skipIf(!urlTeste)("adicionarNota (banco de testes)", () => {
     excluirInscricaoKids = acoes.excluirInscricaoKids;
 
     const usuario = await prisma.usuario.create({
-      data: { nome: `teste-${sufixo}`, senha: "x", primeiroAcesso: false },
+      data: { nome: `teste-${sufixo}`, senha: "x" },
     });
     usuarioId = usuario.id;
 

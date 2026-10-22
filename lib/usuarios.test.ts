@@ -19,7 +19,7 @@ describe.skipIf(!urlTeste)("gestão de contas (banco de testes)", () => {
   const nome = () => `g${sufixo}x${++n}`;
 
   const novaConta = (extra: { nome?: string; papel?: string; ativo?: boolean } = {}) =>
-    prisma.usuario.create({ data: { nome: extra.nome ?? nome(), senha: "hash-qualquer", primeiroAcesso: false, papel: extra.papel ?? "COORDENACAO", ativo: extra.ativo ?? true } });
+    prisma.usuario.create({ data: { nome: extra.nome ?? nome(), senha: "hash-qualquer", papel: extra.papel ?? "COORDENACAO", ativo: extra.ativo ?? true } });
 
   beforeAll(async () => {
     // O lib/prisma lê DATABASE_URL ao ser importado, então apontamos para o banco de testes antes.

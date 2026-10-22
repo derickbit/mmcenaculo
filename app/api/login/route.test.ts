@@ -25,7 +25,7 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
   const novoUsuario = async () => {
     const nome = `u${sufixo}-${++nomeN}`;
     await prisma.usuario.create({
-      data: { nome, senha: bcrypt.hashSync(SENHA, 4), primeiroAcesso: false },
+      data: { nome, senha: bcrypt.hashSync(SENHA, 4) },
     });
     nomesCriados.push(nome);
     return nome;
@@ -158,5 +158,16 @@ describe.skipIf(!urlTeste)("POST /api/login (banco de testes)", () => {
     const { verificarToken } = await import("@/lib/session");
     const conta = await prisma.usuario.findUniqueOrThrow({ where: { nome } });
     expect((await verificarToken(cookie))?.sub).toBe(conta.id);
+  });
+
+  it("senha guardada em texto puro (sem criptografia) NÃO entra, mesmo digitando exatamente essa senha", async () => {
+    // Antes existia uma "senha provisória" em texto puro; ela foi eliminada de vez.
+    const nome = `u${sufixo}-puro${++nomeN}`;
+    await prisma.usuario.create({ data: { nome, senha: "123" } });
+    nomesCriados.push(nome);
+
+    const resposta = await entrar(nome, "123", novoIp());
+    expect(resposta.status).toBe(401);
+    expect(resposta.headers.get("set-cookie")).toBeNull();
   });
 });
