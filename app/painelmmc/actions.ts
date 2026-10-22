@@ -26,7 +26,7 @@ export async function adicionarNota(inscricaoId: string, formData: FormData) {
   });
 
   // Atualiza a tela automaticamente
-  revalidatePath("/admin");
+  revalidatePath("/painelmmc");
 }
 
 // Nota sobre uma inscrição Kids (fica ligada só à inscrição Kids, nunca à de adulto).
@@ -40,7 +40,7 @@ export async function adicionarNotaKids(inscricaoKidsId: string, formData: FormD
     data: { texto, inscricaoKidsId, usuarioId: usuario.id }
   });
 
-  revalidatePath("/admin/kids");
+  revalidatePath("/painelmmc/kids");
 }
 
 // Exclui a inscrição Kids; as notas dela vão junto (cascata). Atende pedidos de exclusão de dados (LGPD).
@@ -48,5 +48,5 @@ export async function excluirInscricaoKids(formData: FormData) {
   await exigirSessao();
   const id = formData.get("id") as string;
   await prisma.inscricaoKids.delete({ where: { id } });
-  revalidatePath("/admin/kids");
+  revalidatePath("/painelmmc/kids");
 }

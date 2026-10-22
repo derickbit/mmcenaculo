@@ -47,7 +47,7 @@ async function cadastrarMembro(formData: FormData) {
       data: { nome, grupo, cenaculoFeito }
     });
     
-    revalidatePath("/admin/frequencia");
+    revalidatePath("/painelmmc/frequencia");
     return { sucesso: true };
   }
 
@@ -58,7 +58,7 @@ async function cadastrarMembro(formData: FormData) {
     const data = new Date(formData.get("data") as string);
     if (!nome) return;
     await prisma.atividade.create({ data: { nome, data } });
-    revalidatePath("/admin/frequencia");
+    revalidatePath("/painelmmc/frequencia");
   }
 
   // 🔴 AÇÃO ATUALIZADA: Proteção blindada contra presenças duplicadas
@@ -80,7 +80,7 @@ async function cadastrarMembro(formData: FormData) {
         skipDuplicates: true // Trava atômica do PostgreSQL: ignora se já tiver presença!
       });
     }
-    revalidatePath("/admin/frequencia");
+    revalidatePath("/painelmmc/frequencia");
   }
 
   // 🔴 NOVA AÇÃO: Excluir Membro
@@ -89,7 +89,7 @@ async function cadastrarMembro(formData: FormData) {
     await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.membro.delete({ where: { id } });
-    revalidatePath("/admin/frequencia");
+    revalidatePath("/painelmmc/frequencia");
   }
 
   return (

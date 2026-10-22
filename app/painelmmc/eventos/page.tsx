@@ -44,7 +44,7 @@ async function criarEvento(formData: FormData) {
         status: "AUTOMATICO"
       }
     });
-    revalidatePath("/admin/eventos");
+    revalidatePath("/painelmmc/eventos");
     revalidatePath("/calendario");
     revalidatePath("/inscricao");
   }
@@ -55,7 +55,7 @@ async function criarEvento(formData: FormData) {
     const id = formData.get("id") as string;
     const novoStatus = formData.get("novoStatus") as string;
     await prisma.evento.update({ where: { id }, data: { status: novoStatus } });
-    revalidatePath("/admin/eventos");
+    revalidatePath("/painelmmc/eventos");
     revalidatePath("/calendario");
   }
 
@@ -64,7 +64,7 @@ async function criarEvento(formData: FormData) {
     await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.evento.delete({ where: { id } });
-    revalidatePath("/admin/eventos");
+    revalidatePath("/painelmmc/eventos");
     revalidatePath("/calendario");
   }
 
@@ -97,7 +97,7 @@ async function criarEvento(formData: FormData) {
                       <img src={evento.imagemCapa} alt="Capa" className="w-12 h-12 rounded object-cover shadow-sm" />
                     )}
                     <div>
-                      <Link href={`/admin?eventoId=${evento.id}`} className="text-cenaculo-blue hover:text-cenaculo-gold transition underline-offset-4 hover:underline text-lg">
+                      <Link href={`/painelmmc?eventoId=${evento.id}`} className="text-cenaculo-blue hover:text-cenaculo-gold transition underline-offset-4 hover:underline text-lg">
                         {evento.nome}
                       </Link>
                       <div className="text-xs text-gray-500 mt-1 uppercase tracking-wider">{evento.tipo}</div>

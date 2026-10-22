@@ -13,7 +13,7 @@ Plataforma web desenvolvida para o **Movimento Mariano Cenáculo**, para substit
 - Lista de espera (pré-cadastro) quando as vagas não estão abertas.
 - Galeria de fotos por evento e página institucional.
 
-**Painel administrativo** (`/admin`, protegido por login)
+**Painel administrativo** (`/painelmmc`, protegido por login)
 - Inscritos: filtro por evento, detalhes, notas internas e exclusão.
 - Exportação das inscrições para Excel (`.xlsx`).
 - Eventos: criação com imagem de capa, duração de 1 a 3 dias, abertura automática de vagas e status manual.
@@ -35,7 +35,7 @@ Plataforma web desenvolvida para o **Movimento Mariano Cenáculo**, para substit
 ## Segurança do painel
 
 - Sessão em cookie `httpOnly`, assinado com HMAC-SHA256 e com validade de 8 horas.
-- Middleware valida a assinatura em todas as rotas `/admin`, e as Server Actions conferem a sessão novamente.
+- Middleware valida a assinatura em todas as rotas `/painelmmc`, e as Server Actions conferem a sessão novamente.
 - Senhas guardadas com bcrypt. O primeiro acesso usa uma senha provisória e obriga a troca antes de qualquer outra tela.
 - Login com mensagem de erro genérica, para não revelar quais usuários existem.
 

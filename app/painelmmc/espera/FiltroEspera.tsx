@@ -13,9 +13,9 @@ export default function FiltroEspera({ tipoAtual }: { tipoAtual: string }) {
         onChange={(e) => {
           const valor = e.target.value;
           if (valor === "") {
-            router.push("/admin/espera"); // Remove o filtro da URL
+            router.push("/painelmmc/espera"); // Remove o filtro da URL
           } else {
-            router.push(`/admin/espera?tipo=${valor}`); // Adiciona o filtro na URL
+            router.push(`/painelmmc/espera?tipo=${valor}`); // Adiciona o filtro na URL
           }
         }}
         className="p-2 border border-gray-300 rounded focus:ring-cenaculo-gold bg-gray-50 outline-none text-sm font-semibold"

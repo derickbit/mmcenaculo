@@ -19,7 +19,7 @@ export default async function AdminGaleriaPage() {
     await prisma.foto.create({
       data: { eventoId, url }
     });
-    revalidatePath("/admin/galeria");
+    revalidatePath("/painelmmc/galeria");
     revalidatePath("/galeria");
   }
 
@@ -29,7 +29,7 @@ export default async function AdminGaleriaPage() {
     await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.foto.delete({ where: { id } });
-    revalidatePath("/admin/galeria");
+    revalidatePath("/painelmmc/galeria");
     revalidatePath("/galeria");
   }
 

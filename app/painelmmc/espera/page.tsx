@@ -24,7 +24,7 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
     const id = formData.get("id") as string;
     
     await prisma.preCadastro.delete({ where: { id } });
-    revalidatePath("/admin/espera");
+    revalidatePath("/painelmmc/espera");
   }
 
   return (

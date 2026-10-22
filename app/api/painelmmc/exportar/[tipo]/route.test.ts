@@ -29,7 +29,7 @@ describe.skipIf(!urlTeste)("exportação de planilhas (banco de testes)", () => 
     login.atual = { sub: `teste-${sufixo}`, pa: false, exp: 9_999_999_999 };
   };
   const baixar = (tipo: string, consulta = "") =>
-    GET(new Request(`http://localhost/api/admin/exportar/${tipo}${consulta}`), { params: Promise.resolve({ tipo }) });
+    GET(new Request(`http://localhost/api/painelmmc/exportar/${tipo}${consulta}`), { params: Promise.resolve({ tipo }) });
   const abrir = async (resposta: Response) => lerZip(Buffer.from(await resposta.arrayBuffer()));
 
   const novoEvento = async (nome: string, tipo: string) => {

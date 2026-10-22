@@ -134,7 +134,7 @@ export default function PainelAbasFrequencia({
   }, [membros, filtroGrupoRelatorio]);
 
   // A planilha é montada no servidor; o link leva o grupo escolhido no filtro.
-  const enderecoExportacao = `/api/admin/exportar/frequencia${filtroGrupoRelatorio ? `?grupo=${encodeURIComponent(filtroGrupoRelatorio)}` : ""}`;
+  const enderecoExportacao = `/api/painelmmc/exportar/frequencia${filtroGrupoRelatorio ? `?grupo=${encodeURIComponent(filtroGrupoRelatorio)}` : ""}`;
 
   return (
     <>

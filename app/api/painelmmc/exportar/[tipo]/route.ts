@@ -12,9 +12,9 @@ import {
 } from "@/lib/planilha";
 
 // Planilhas do painel (.xlsx), geradas aqui no servidor depois de conferir o login:
-//   /api/admin/exportar/inscritos?eventoId=...   inscritos adultos (sem eventoId: todos os eventos)
-//   /api/admin/exportar/kids?eventoId=...        inscritos Kids
-//   /api/admin/exportar/frequencia?grupo=...     relatório de frequência (sem grupo: todos)
+//   /api/painelmmc/exportar/inscritos?eventoId=...   inscritos adultos (sem eventoId: todos os eventos)
+//   /api/painelmmc/exportar/kids?eventoId=...        inscritos Kids
+//   /api/painelmmc/exportar/frequencia?grupo=...     relatório de frequência (sem grupo: todos)
 
 const erro = (mensagem: string, status: number) => NextResponse.json({ error: mensagem }, { status });
 

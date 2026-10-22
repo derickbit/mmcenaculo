@@ -7,13 +7,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
 
-  if (pathname === "/admin/login") {
+  if (pathname === "/painelmmc/login") {
     return <>{children}</>;
   }
 
   const handleLogout = async () => {
     await fetch('/api/logout', { method: 'POST' });
-    router.push('/admin/login');
+    router.push('/painelmmc/login');
     router.refresh();
   };
 
@@ -26,22 +26,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         
         <nav className="flex-1 p-3 md:p-4 space-y-2 md:mt-4 overflow-x-auto md:overflow-visible whitespace-nowrap md:whitespace-normal">
-          <Link href="/admin/eventos" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/eventos') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+          <Link href="/painelmmc/eventos" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/eventos') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Gerenciar Eventos
           </Link>
-          <Link href="/admin" className={`block p-3 rounded-lg transition-colors ${pathname === '/admin' ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+          <Link href="/painelmmc" className={`block p-3 rounded-lg transition-colors ${pathname === '/painelmmc' ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Inscrições
           </Link>
-          <Link href="/admin/kids" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/kids') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+          <Link href="/painelmmc/kids" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/kids') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Inscrições Kids
           </Link>
-          <Link href="/admin/espera" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/espera') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+          <Link href="/painelmmc/espera" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/espera') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Lista de Espera
           </Link>
-          <Link href="/admin/galeria" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/galeria') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+          <Link href="/painelmmc/galeria" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/galeria') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Galeria de Fotos
           </Link>
-          <Link href="/admin/frequencia" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/frequencia') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
+          <Link href="/painelmmc/frequencia" className={`block p-3 rounded-lg transition-colors ${pathname.includes('/frequencia') ? 'bg-cenaculo-gold text-cenaculo-blue font-bold' : 'hover:bg-[#1a1d7a]'}`}>
             Frequência e Presença
           </Link>
         </nav>

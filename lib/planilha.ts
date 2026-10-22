@@ -3,7 +3,7 @@ import type { SheetData } from "write-excel-file/node";
 import { FAIXA_KIDS, PARENTESCO_ROTULOS, foraDaFaixaKids, idadeEm, type Parentesco } from "@/lib/kids";
 
 // Montagem das planilhas exportadas pelo painel. As linhas são montadas por funções simples (fáceis de testar) e o arquivo
-// .xlsx é gerado no servidor, depois de conferir o login (ver as rotas em app/api/admin/exportar).
+// .xlsx é gerado no servidor, depois de conferir o login (ver as rotas em app/api/painelmmc/exportar).
 //
 // Segurança: texto vindo do formulário público é sempre gravado como TEXTO. O .xlsx tem um tipo de célula próprio para
 // fórmulas, e esta biblioteca só o usa se pedirmos; por isso um nome como "=HYPERLINK(...)" aparece como texto e não é

@@ -33,5 +33,5 @@ export async function aceitarConviteAction(_anterior: EstadoAceite, formData: Fo
   // Conta criada: a pessoa já entra no painel.
   const token = await criarToken(resultado.usuario.id, false);
   (await cookies()).set(COOKIE_SESSAO, token, opcoesCookieSessao());
-  redirect("/admin");
+  redirect("/painelmmc");
 }

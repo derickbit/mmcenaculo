@@ -30,9 +30,9 @@ if (response.ok) {
         
         // 🔴 Se for primeiro acesso, manda para redefinir a senha!
         if (data.primeiroAcesso) {
-          router.push('/admin/setup');
+          router.push('/painelmmc/setup');
         } else {
-          router.push('/admin');
+          router.push('/painelmmc');
         }
         router.refresh();
       } else {

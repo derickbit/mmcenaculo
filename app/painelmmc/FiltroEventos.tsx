@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 type EventoResumo = { id: string; nome: string; status: string; };
 
-export default function FiltroEventos({ eventos, eventoSelecionadoId, rota = "/admin" }: { eventos: EventoResumo[], eventoSelecionadoId: string, rota?: string }) {
+export default function FiltroEventos({ eventos, eventoSelecionadoId, rota = "/painelmmc" }: { eventos: EventoResumo[], eventoSelecionadoId: string, rota?: string }) {
   const router = useRouter();
 
   return (

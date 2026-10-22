@@ -50,9 +50,9 @@ Testa a função `getStatusReal` (`lib/eventos.ts`), que decide se um evento est
 - A função recebe a hora atual como parâmetro opcional (`agora`). Os testes usam isso para "congelar"
   o relógio e não dependerem do dia em que são executados.
 
-### 2. Painel de admin: `app/admin/actions.test.ts` (7 testes)
+### 2. Painel de admin: `app/painelmmc/actions.test.ts` (7 testes)
 
-Testa a ação `adicionarNota` (`app/admin/actions.ts`), usada no painel para registrar uma observação sobre uma inscrição.
+Testa a ação `adicionarNota` (`app/painelmmc/actions.ts`), usada no painel para registrar uma observação sobre uma inscrição.
 
 - **Grava a nota com o usuário logado e lista com o nome do autor.** A nota deve ficar ligada ao `id` do usuário da sessão e, ao listar, o nome dele deve aparecer.
 - **Recusa e não grava nada se o usuário da sessão não existe.**
@@ -189,9 +189,9 @@ vale para arquivos **CSV**. Num `.xlsx`, texto é gravado como texto, e só vira
 apóstrofo estragaria dados de verdade (por exemplo, um telefone começando com `+55`) para evitar um risco que não existe. O teste
 acima é a garantia no lugar disso: se uma troca futura de biblioteca mudar esse comportamento, ele avisa.
 
-### 12. Rotas de exportação: `app/api/admin/exportar/[tipo]/route.test.ts` (10 testes, com banco)
+### 12. Rotas de exportação: `app/api/painelmmc/exportar/[tipo]/route.test.ts` (10 testes, com banco)
 
-Chamam `GET /api/admin/exportar/inscritos`, `/kids` e `/frequencia` de verdade, contra o banco de testes, e **abrem o `.xlsx` que
+Chamam `GET /api/painelmmc/exportar/inscritos`, `/kids` e `/frequencia` de verdade, contra o banco de testes, e **abrem o `.xlsx` que
 voltou** para conferir o conteúdo.
 
 - **Quem pode baixar:** sem login, nenhuma das três planilhas é entregue (erro 401); com a senha provisória ainda não trocada, também
@@ -246,7 +246,7 @@ A pessoa convidada abre o link, vê o **usuário que o admin escolheu** já pree
 
 *A ação do servidor (com banco):*
 
-- Cria a conta, **já entra no painel** (o cookie de sessão gravado é válido e é do usuário certo) e manda para `/admin`.
+- Cria a conta, **já entra no painel** (o cookie de sessão gravado é válido e é do usuário certo) e manda para `/painelmmc`.
 - Senhas diferentes ou senha curta: o aviso volta ao lado do campo e o convite **não é gasto**.
 - Link inválido ou já usado: a mesma mensagem, sem conta e sem cookie.
 - **Limite de tentativas** por IP (10 a cada 15 minutos): a 11ª é recusada mesmo com um convite válido, que continua livre; outro IP não é afetado.
@@ -298,7 +298,7 @@ docker exec mmcenaculo_postgres psql -U admin -d postgres -c "CREATE DATABASE ce
 Depois aplicar o schema nele (ajuste usuário e senha se os seus forem diferentes):
 
 ```bash
-DATABASE_URL="postgresql://admin:adminpassword@localhost:5432/cenaculodb_test" npx prisma db push
+DATABASE_URL="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test" npx prisma db push
 ```
 
 (No PowerShell: `$env:DATABASE_URL="..."; npx prisma db push`.)
@@ -306,7 +306,7 @@ DATABASE_URL="postgresql://admin:adminpassword@localhost:5432/cenaculodb_test" n
 **Ligar nos testes:** no `.env`, adicionar
 
 ```
-DATABASE_URL_TESTE="postgresql://admin:adminpassword@localhost:5432/cenaculodb_test"
+DATABASE_URL_TESTE="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test"
 ```
 
 Se alguma tabela mudar no `prisma/schema.prisma`, rode o `db push` de novo também no banco de testes.

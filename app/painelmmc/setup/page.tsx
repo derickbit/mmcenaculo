@@ -10,8 +10,8 @@ const TAMANHO_MINIMO_SENHA = 8;
 export default async function SetupPage({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
   // Só chega aqui quem está logado com senha provisória (o middleware também garante isso).
   const sessao = await lerSessao();
-  if (!sessao) redirect("/admin/login");
-  if (!sessao.pa) redirect("/admin");
+  if (!sessao) redirect("/painelmmc/login");
+  if (!sessao.pa) redirect("/painelmmc");
 
   const params = await searchParams;
   const usuarioNome = sessao.nome;
@@ -21,13 +21,13 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
     // O usuário vem da sessão assinada, nunca do formulário.
     const atual = await lerSessao();
-    if (!atual || !atual.pa) redirect("/admin/login");
+    if (!atual || !atual.pa) redirect("/painelmmc/login");
 
     const novaSenha = String(formData.get("novaSenha") ?? "");
     const confirmacao = String(formData.get("confirmacao") ?? "");
 
-    if (novaSenha.length < TAMANHO_MINIMO_SENHA) redirect("/admin/setup?erro=curta");
-    if (novaSenha !== confirmacao) redirect("/admin/setup?erro=diferente");
+    if (novaSenha.length < TAMANHO_MINIMO_SENHA) redirect("/painelmmc/setup?erro=curta");
+    if (novaSenha !== confirmacao) redirect("/painelmmc/setup?erro=diferente");
 
     const senhaCriptografada = await bcrypt.hash(novaSenha, 10);
 
@@ -41,7 +41,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
     const armazenamento = await cookies();
     armazenamento.set(COOKIE_SESSAO, token, opcoesCookieSessao());
 
-    redirect("/admin");
+    redirect("/painelmmc");
   }
 
   const mensagemErro =

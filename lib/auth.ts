@@ -33,15 +33,15 @@ export async function lerSessao(): Promise<SessaoValida | null> {
 // (assim a página não depende só do proxy, que é apenas uma checagem rápida).
 export async function exigirSessaoPagina(): Promise<SessaoValida> {
   const sessao = await lerSessao();
-  if (!sessao) redirect("/admin/login");
-  if (sessao.pa) redirect("/admin/setup");
+  if (!sessao) redirect("/painelmmc/login");
+  if (sessao.pa) redirect("/painelmmc/setup");
   return sessao;
 }
 
 // Páginas que só o ADMIN pode ver (gestão de contas): quem é da coordenação volta para o painel.
 export async function exigirAdminPagina(): Promise<SessaoValida> {
   const sessao = await exigirSessaoPagina();
-  if (sessao.papel !== "ADMIN") redirect("/admin");
+  if (sessao.papel !== "ADMIN") redirect("/painelmmc");
   return sessao;
 }
 

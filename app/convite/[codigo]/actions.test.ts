@@ -71,10 +71,10 @@ describe.skipIf(!urlTeste)("aceitar convite pela página (banco de testes)", () 
     await prisma.$disconnect();
   });
 
-  it("cria a conta, entra no painel (cookie de sessão válido) e manda para /admin", async () => {
+  it("cria a conta, entra no painel (cookie de sessão válido) e manda para /painelmmc", async () => {
     const { codigo, convite } = await novoConvite();
 
-    await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/admin");
+    await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/painelmmc");
 
     const conta = await prisma.usuario.findFirstOrThrow({ where: { nome: convite.nomeUsuario, papel: "COORDENACAO", ativo: true } });
 
@@ -106,7 +106,7 @@ describe.skipIf(!urlTeste)("aceitar convite pela página (banco de testes)", () 
     expect(errado?.mensagem).toMatch(/inválido ou expirou/);
 
     const { codigo } = await novoConvite();
-    await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/admin");
+    await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/painelmmc");
     cookiesGravados.length = 0;
 
     const reuso = await aceitar(null, form({ codigo, senha: "outra-senha-boa-456", confirmacao: "outra-senha-boa-456" }));
@@ -125,6 +125,6 @@ describe.skipIf(!urlTeste)("aceitar convite pela página (banco de testes)", () 
     expect((await convites.consultarConvite(codigo)).estado).toBe("VALIDO");
 
     origem.ip = `ip-${sufixo}-outro`; // outro IP não é afetado
-    await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/admin");
+    await expect(aceitar(null, form({ codigo, senha: SENHA, confirmacao: SENHA }))).rejects.toThrow("REDIRECT:/painelmmc");
   });
 });

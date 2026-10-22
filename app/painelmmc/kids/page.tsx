@@ -44,7 +44,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
 
         <div className="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
           <label className="text-sm font-bold text-gray-700 whitespace-nowrap">Filtrar por Evento:</label>
-          <FiltroEventos eventos={eventos} eventoSelecionadoId={eventoId} rota="/admin/kids" />
+          <FiltroEventos eventos={eventos} eventoSelecionadoId={eventoId} rota="/painelmmc/kids" />
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
         <div className="font-bold">
           Total: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
         </div>
-        <BotaoExportar href={`/api/admin/exportar/kids${eventoId ? `?eventoId=${encodeURIComponent(eventoId)}` : ""}`} />
+        <BotaoExportar href={`/api/painelmmc/exportar/kids${eventoId ? `?eventoId=${encodeURIComponent(eventoId)}` : ""}`} />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">

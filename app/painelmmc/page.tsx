@@ -11,7 +11,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const resolvedParams = await searchParams;
 
   const eventos = await prisma.evento.findMany({
-    where: { tipo: { not: "KIDS" } }, // Kids tem página própria: /admin/kids
+    where: { tipo: { not: "KIDS" } }, // Kids tem página própria: /painelmmc/kids
     orderBy: { criadoEm: 'desc' }
   });
 
@@ -35,7 +35,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     await exigirSessao();
     const id = formData.get("id") as string;
     await prisma.inscricao.delete({ where: { id } });
-    revalidatePath("/admin");
+    revalidatePath("/painelmmc");
   }
 
   return (
@@ -56,7 +56,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <div className="font-bold">
           Total neste evento: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
         </div>
-        <BotaoExportar href={`/api/admin/exportar/inscritos${eventoSelecionadoId ? `?eventoId=${encodeURIComponent(eventoSelecionadoId)}` : ""}`} />
+        <BotaoExportar href={`/api/painelmmc/exportar/inscritos${eventoSelecionadoId ? `?eventoId=${encodeURIComponent(eventoSelecionadoId)}` : ""}`} />
       </div>
 
       {/* CHAMA A NOSSA NOVA TABELA INTELIGENTE E PASSA OS DADOS DO PRISMA */}

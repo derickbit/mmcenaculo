@@ -151,16 +151,16 @@ describe.skipIf(!urlTeste)("sessão conferida no banco (banco de testes)", () =>
     it("exigirAdminPagina leva a coordenação de volta ao painel e quem não entrou ao login", async () => {
       const coordenacao = await novaConta({ papel: "COORDENACAO" });
       await entrarComo(coordenacao.id);
-      await expect(auth.exigirAdminPagina()).rejects.toThrow("REDIRECT:/admin");
+      await expect(auth.exigirAdminPagina()).rejects.toThrow("REDIRECT:/painelmmc");
 
       navegador.cookie = undefined;
-      await expect(auth.exigirAdminPagina()).rejects.toThrow("REDIRECT:/admin/login");
+      await expect(auth.exigirAdminPagina()).rejects.toThrow("REDIRECT:/painelmmc/login");
     });
 
     it("exigirSessaoPagina leva quem está com senha provisória para a troca", async () => {
       const conta = await novaConta();
       await entrarComo(conta.id, true);
-      await expect(auth.exigirSessaoPagina()).rejects.toThrow("REDIRECT:/admin/setup");
+      await expect(auth.exigirSessaoPagina()).rejects.toThrow("REDIRECT:/painelmmc/setup");
     });
   });
 });
