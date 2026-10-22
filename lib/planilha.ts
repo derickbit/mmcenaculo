@@ -90,7 +90,7 @@ export function abaInscritosKids(inscricoes: InscricaoKidsExport[]): Aba {
   const linhas: SheetData = [
     cabecalho([
       "Criança", "Idade no evento", "Data de Nascimento", `Fora da faixa ${FAIXA_KIDS.min}-${FAIXA_KIDS.max}?`, "Saúde",
-      "Responsável", "Parentesco", "Telefone", "E-mail", "Consentimento em", "Data da Inscrição", "Evento",
+      "Responsável", "Parentesco", "Telefone do responsável", "E-mail do responsável", "Consentimento em", "Data da Inscrição", "Evento",
       "Observações Internas (Auditoria)",
     ]),
     ...inscricoes.map((i) => [
@@ -109,7 +109,7 @@ export function abaInscritosKids(inscricoes: InscricaoKidsExport[]): Aba {
       notas(i.observacoes),
     ]),
   ];
-  return { nome: "Inscritos Kids", linhas, larguras: [18, 14, 14, 18, 34, 30, 16, 18, 30, 20, 20, 24, 50] };
+  return { nome: "Inscritos Kids", linhas, larguras: [18, 14, 14, 18, 34, 30, 16, 24, 32, 20, 20, 24, 50] };
 }
 
 export function abaFrequencia(membros: MembroExport[]): Aba {
@@ -130,6 +130,13 @@ export function abaFrequencia(membros: MembroExport[]): Aba {
 
 export async function gerarXlsx(aba: Aba): Promise<Buffer> {
   return writeExcelFile([{ data: aba.linhas, sheet: aba.nome, columns: aba.larguras.map((width) => ({ width })) }]).toBuffer();
+}
+
+// Nome do arquivo para download: sem acentos nem símbolos, com o dia de hoje (em Brasília).
+export function nomeDeArquivo(prefixo: string, descricao: string, agora: Date = new Date()): string {
+  const limpo = descricao.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  const dia = agora.toLocaleDateString("sv-SE", { timeZone: FUSO });
+  return `${prefixo}_${limpo || "evento"}_${dia}.xlsx`;
 }
 
 export const TIPO_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

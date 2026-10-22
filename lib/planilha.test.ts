@@ -1,41 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { inflateRawSync } from "node:zlib";
 import {
   abaFrequencia,
   abaInscritosAdultos,
   abaInscritosKids,
   gerarXlsx,
+  nomeDeArquivo,
   type InscricaoAdultoExport,
   type InscricaoKidsExport,
 } from "./planilha";
-
-// Lê os arquivos de dentro de um .xlsx (que é um zip), sem bibliotecas: só para o teste olhar o que foi gravado.
-function lerZip(buffer: Buffer): Record<string, string> {
-  let fim = buffer.length - 22;
-  while (fim >= 0 && buffer.readUInt32LE(fim) !== 0x06054b50) fim--;
-  const total = buffer.readUInt16LE(fim + 10);
-  let pos = buffer.readUInt32LE(fim + 16);
-
-  const arquivos: Record<string, string> = {};
-  for (let i = 0; i < total; i++) {
-    const metodo = buffer.readUInt16LE(pos + 10);
-    const tamanhoComprimido = buffer.readUInt32LE(pos + 20);
-    const tamanhoNome = buffer.readUInt16LE(pos + 28);
-    const tamanhoExtra = buffer.readUInt16LE(pos + 30);
-    const tamanhoComentario = buffer.readUInt16LE(pos + 32);
-    const deslocamentoLocal = buffer.readUInt32LE(pos + 42);
-    const nome = buffer.toString("utf8", pos + 46, pos + 46 + tamanhoNome);
-
-    const nomeLocal = buffer.readUInt16LE(deslocamentoLocal + 26);
-    const extraLocal = buffer.readUInt16LE(deslocamentoLocal + 28);
-    const inicio = deslocamentoLocal + 30 + nomeLocal + extraLocal;
-    const dados = buffer.subarray(inicio, inicio + tamanhoComprimido);
-    arquivos[nome] = (metodo === 8 ? inflateRawSync(dados) : dados).toString("utf8");
-
-    pos += 46 + tamanhoNome + tamanhoExtra + tamanhoComentario;
-  }
-  return arquivos;
-}
+import { lerZip } from "./lerZipParaTestes";
 
 const autor = { nome: "derick" };
 const nota = { criadoEm: new Date("2026-10-21T20:28:47Z"), texto: "Precisa de carona", usuario: autor };
@@ -122,6 +95,13 @@ describe("planilha de inscritos Kids", () => {
     expect(linha.slice(5, 9)).toEqual(["Ana Souza", "Mãe", "(53) 98888-7777", "ana@email.com"]);
     expect(linha[11]).toBe("Cenáculo Kids");
     expect(linha).toHaveLength((aba.linhas[0] as unknown[]).length);
+  });
+
+  it("deixa claro que telefone e e-mail são do responsável, e não da criança", () => {
+    const titulos = valores(abaInscritosKids([]).linhas[0] as unknown[]);
+    expect(titulos).toContain("Telefone do responsável");
+    expect(titulos).toContain("E-mail do responsável");
+    expect(titulos).not.toContain("Telefone");
   });
 
   it("avisa quando a criança está fora de 8 a 10 anos", () => {
@@ -214,5 +194,22 @@ describe("arquivo .xlsx: texto vindo do público nunca vira fórmula", () => {
     );
     expect(freq["xl/worksheets/sheet1.xml"]).not.toContain("<f");
     expect(freq["xl/sharedStrings.xml"]).toContain("=1+1");
+  });
+});
+
+describe("nome do arquivo para download", () => {
+  const hoje = new Date("2026-10-22T02:30:00Z"); // ainda é dia 21 em Brasília
+
+  it("tira acentos e símbolos e usa o dia de hoje em Brasília", () => {
+    expect(nomeDeArquivo("Inscritos", "83º Cenáculo / São José", hoje)).toBe("Inscritos_83_Cenaculo_Sao_Jose_2026-10-21.xlsx");
+  });
+
+  it("usa um nome padrão quando a descrição não tem letras nem números", () => {
+    expect(nomeDeArquivo("Kids", "***", hoje)).toBe("Kids_evento_2026-10-21.xlsx");
+  });
+
+  it("não deixa caracteres perigosos passarem para o cabeçalho de download", () => {
+    const nome = nomeDeArquivo("Inscritos", 'a"; filename="x.exe\r\nSet-Cookie: y=1', hoje);
+    expect(nome).toMatch(/^[A-Za-z0-9_.-]+$/);
   });
 });

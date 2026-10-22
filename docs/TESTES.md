@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  12 passed (12)
-      Tests  140 passed (140)
+ Test Files  13 passed (13)
+      Tests  154 passed (154)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -154,7 +154,7 @@ que aparece na tela**, para adulto, Kids e lista de espera.
 
 Esses testes não precisam de banco.
 
-### 11. Planilhas exportadas: `lib/planilha.test.ts` (11 testes, sem banco)
+### 11. Planilhas exportadas: `lib/planilha.test.ts` (15 testes, sem banco)
 
 Testam `lib/planilha.ts`, que monta as planilhas `.xlsx` do painel: inscritos adultos, inscritos Kids e frequência.
 
@@ -164,6 +164,10 @@ Testam `lib/planilha.ts`, que monta as planilhas `.xlsx` do painel: inscritos ad
   servidor em UTC (a Vercel).
 - **Kids:** idade **na data do evento**, aviso "fora da faixa 8-10", saúde como texto, como "Falar com a equipe no dia" ou `-`, e o
   parentesco por extenso ("Mãe").
+
+- **Cabeçalhos claros:** na planilha do Kids, telefone e e-mail aparecem como "Telefone do responsável" e "E-mail do responsável".
+- **Nome do arquivo:** sem acentos nem símbolos (inclusive quebras de linha, que poderiam atrapalhar o cabeçalho do download) e com o
+  dia de hoje em Brasília.
 
 **O teste de segurança (importante).** Um texto digitado no formulário público como `=HYPERLINK("http://golpe.example","clique")`,
 `=1+1`, `@SUM(1,2)`, `+55 53 99999-9999` ou `-2+3` poderia ser executado por um programa de planilha **se** fosse gravado como
@@ -180,6 +184,21 @@ Isso vale para as três planilhas. Foi confirmado que o teste **falha** se uma c
 vale para arquivos **CSV**. Num `.xlsx`, texto é gravado como texto, e só vira fórmula se o código pedir de propósito. Colocar o
 apóstrofo estragaria dados de verdade (por exemplo, um telefone começando com `+55`) para evitar um risco que não existe. O teste
 acima é a garantia no lugar disso: se uma troca futura de biblioteca mudar esse comportamento, ele avisa.
+
+### 12. Rotas de exportação: `app/api/admin/exportar/[tipo]/route.test.ts` (10 testes, com banco)
+
+Chamam `GET /api/admin/exportar/inscritos`, `/kids` e `/frequencia` de verdade, contra o banco de testes, e **abrem o `.xlsx` que
+voltou** para conferir o conteúdo.
+
+- **Quem pode baixar:** sem login, nenhuma das três planilhas é entregue (erro 401); com a senha provisória ainda não trocada, também
+  não. A rota confere o login por conta própria, sem depender só do proxy.
+- **Inscritos adultos:** entrega o evento escolhido, com as notas e o nome de quem escreveu, sem as inscrições de outros eventos e sem
+  nenhuma criança. Sem escolher evento, entrega todos. O nome do arquivo e o tipo (`.xlsx`) vêm certos, e a resposta não fica em cache.
+- **Texto perigoso** digitado no formulário (`=1+1`, `=HYPERLINK(...)`) sai como texto, sem fórmula, também por este caminho.
+- **Kids:** entrega a criança com o contato do responsável (telefone e e-mail), o aviso "Falar com a equipe no dia" e o parentesco por
+  extenso, e nenhum adulto.
+- **Frequência:** entrega os membros com as presenças, e filtra por grupo.
+- Evento inexistente e relatório desconhecido dão 404.
 
 ## O banco de testes
 
@@ -234,7 +253,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 140 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 154 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
