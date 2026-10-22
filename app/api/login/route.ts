@@ -26,12 +26,12 @@ export async function POST(request: Request) {
 
     // Bloqueio temporário depois de várias senhas erradas, por IP e por nome digitado (exista ou não o usuário,
     // para não revelar quais usuários existem).
-    const { maximo, janelaSegundos } = LIMITES.loginFalhas;
+    const { loginFalhasIp: limiteIp, loginFalhasUsuario: limiteUsuario } = LIMITES;
     const chaveIp = `login:ip:${ipDoCliente(request.headers)}`;
     const chaveUsuario = `login:user:${nome.trim().toLowerCase().slice(0, 64)}`;
     const [porIp, porUsuario] = await Promise.all([
-      estaBloqueado(chaveIp, maximo, janelaSegundos),
-      estaBloqueado(chaveUsuario, maximo, janelaSegundos),
+      estaBloqueado(chaveIp, limiteIp.maximo, limiteIp.janelaSegundos),
+      estaBloqueado(chaveUsuario, limiteUsuario.maximo, limiteUsuario.janelaSegundos),
     ]);
     if (!porIp.permitido || !porUsuario.permitido) {
       const espera = Math.max(porIp.tentarEmSegundos, porUsuario.tentarEmSegundos);
@@ -56,7 +56,10 @@ export async function POST(request: Request) {
     }
 
     if (!usuario || !senhaValida) {
-      await Promise.all([registrarTentativa(chaveIp, janelaSegundos), registrarTentativa(chaveUsuario, janelaSegundos)]);
+      await Promise.all([
+        registrarTentativa(chaveIp, limiteIp.janelaSegundos),
+        registrarTentativa(chaveUsuario, limiteUsuario.janelaSegundos),
+      ]);
       // Mesma mensagem nos dois casos.
       return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
     }

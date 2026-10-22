@@ -20,7 +20,7 @@ Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultad
 
 ```
  Test Files  11 passed (11)
-      Tests  128 passed (128)
+      Tests  129 passed (129)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -112,12 +112,22 @@ O limitador (`lib/limite.ts`) conta tentativas por chave (por exemplo, o IP) num
 - `estaBloqueado` só consulta, sem contar; `limpar` zera; `limparVencidas` apaga só o que tem mais de um dia.
 - `lib/ip.ts` lê o IP do visitante (primeiro IP do `x-forwarded-for`; valor padrão se não houver).
 
-### 7. Login: `app/api/login/route.test.ts` (6 testes, com banco)
+### 7. Login: `app/api/login/route.test.ts` (7 testes, com banco)
+
+O login conta só as senhas **erradas**, em duas contagens separadas, ambas numa janela de 15 minutos (valores em `LIMITES`, em
+`lib/limite.ts`):
+
+- **Por usuário: 5 erros.**
+- **Por IP: 10 erros.** Um teto maior que o de um usuário só: na coordenação todos usam o mesmo Wi-Fi, e um usuário que erra bastante
+  **não** trava os outros do mesmo IP. Já um IP que erra com vários nomes diferentes esbarra nos 15 e fica bloqueado para todos.
+
+O que os testes conferem:
 
 - Login certo entra e entrega o cookie; senha errada e usuário inexistente dão a mesma resposta.
-- Depois de 5 senhas erradas em 15 minutos, bloqueia (429), mesmo com a senha certa.
-- O bloqueio vale para o usuário em qualquer IP e para o IP com qualquer usuário, e também para nomes que não existem (sem
-  revelar quais existem).
+- Depois do máximo de erros no mesmo usuário, bloqueia (429) mesmo com a senha certa, e o bloqueio vale em qualquer IP.
+- O bloqueio de um usuário **não** trava outros usuários do mesmo IP.
+- Um IP que erra com muitos nomes diferentes é bloqueado para todos os usuários.
+- O bloqueio vale também para nomes que não existem, sem revelar quais usuários existem.
 - Um login certo zera as falhas daquele usuário.
 
 ### 8. Honeypot: `lib/honeypot.test.ts` (7 testes, sem banco)
@@ -197,7 +207,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 128 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 129 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
