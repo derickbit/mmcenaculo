@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  20 passed (20)
-      Tests  240 passed (240)
+ Test Files  26 passed (26)
+      Tests  295 passed (295)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -302,6 +302,54 @@ e em cada ação.
 Efeito a ter em mente: quem estiver deslogado e abrir um endereço salvo do painel (por exemplo `/painelmmc`) vê "não encontrado"; o
 caminho de entrada é `/painelmmc/login` (é para onde o cadeado do rodapé aponta).
 
+### 17. Gestão de contas: `lib/usuarios.test.ts` (12), `app/painelmmc/usuarios/actions.test.ts` (6), `usuarios.test.tsx` (16), `page.test.tsx` (2) e `app/painelmmc/PainelShell.test.tsx` (6)
+
+A tela `/painelmmc/usuarios`, **só para o ADMIN**: convidar pessoas, redefinir senhas, renomear e desativar contas. Os nomes em maiúsculas,
+como ADMIN, são o cargo no banco; "excluir" uma conta é **desativar**: o histórico dela fica intacto.
+
+*Lógica (`lib/usuarios.ts`, com banco):*
+
+- **Renomear:** as notas antigas passam a mostrar o nome novo (o histórico continua lá). Recusa nome inválido, nome de outra conta (sem
+  diferenciar maiúsculas; mudar só as maiúsculas da própria conta é permitido) e nome reservado por um convite pendente. Um link de
+  redefinição ainda pendente passa a mostrar o nome novo.
+- **Desativar:** a conta deixa de entrar na hora, as sessões abertas caem, os links de redefinição pendentes são revogados e **nada é
+  apagado**. **Reativar** devolve o acesso, mas os cookies de antes da desativação **continuam mortos**.
+- A conta de **administrador nunca é alterada** por aqui (renomear, desativar, reativar), nem conta que não existe.
+- As listas da tela: o admin vem primeiro, **a senha nunca é devolvida**, e o código do link de convite nunca aparece (no banco há só o hash).
+
+*As ações do servidor (`actions.test.ts`, com banco):*
+
+- **Sem login ou como coordenação, NENHUMA ação funciona e nada muda no banco** (nem convite novo, nem senha, nem desativação). Cada
+  ação confere o ADMIN antes de qualquer coisa; foi confirmado, uma a uma, que o teste falha se uma delas deixar de conferir.
+- Como ADMIN: gerar convite devolve o link **uma vez**; redefinir a senha devolve o link e a senha antiga para de funcionar; revogar,
+  renomear, desativar e reativar fazem o que dizem e recusam a conta de administrador.
+
+*A tela (`usuarios.test.tsx`, num navegador simulado):*
+
+- A conta de administrador aparece **protegida, sem botões**; as de coordenação têm Renomear, Redefinir senha e Desativar; a desativada
+  oferece Reativar.
+- O **link aparece uma única vez** (com o endereço do site e o aviso), o botão Copiar usa a área de transferência, e "Fechar" faz o link
+  sumir. Erros (por exemplo, usuário que já existe) aparecem ao lado do campo, sem apagar o que foi digitado.
+- Redefinir senha e desativar **perguntam antes**, avisando que a senha atual deixa de valer e que o histórico fica intacto; cancelar
+  não faz nada. Renomear abre um campo com o nome atual e, se o servidor recusar, mostra o motivo na linha e mantém o campo aberto.
+- A lista de convites mostra tipo, situação e quem usou; **só o pendente tem Revogar**.
+- **A página** só abre para o ADMIN: quem não é ADMIN é mandado embora **sem sequer carregar a lista de usuários**.
+- **O menu** mostra o item **"Usuários" só para o ADMIN** (a coordenação vê o resto do menu), mostra quem está logado e o cargo, e na
+  tela de login não há menu.
+
+### 18. Todas as páginas conferem a sessão: `app/painelmmc/protecao.test.ts` (13 testes, sem banco)
+
+O proxy só olha o cookie. Se uma página não conferir a sessão **no banco**, uma conta desativada (com a pessoa logada) continua vendo
+os dados. Isso aconteceu de verdade e foi descoberto num teste com o site compilado: a lista de inscritos, eventos, lista de espera,
+galeria e frequência abriam mesmo com a conta desativada, enquanto a exportação e as ações já barravam. Foi corrigido, e este teste
+**impede que volte**:
+
+- **Varre todas as páginas do painel** e exige que cada uma (menos a de login, que é pública, e a de primeiro acesso) chame
+  `exigirSessaoPagina()` ou `exigirAdminPagina()` **antes de qualquer uso do banco**. Uma página nova, criada sem essa conferência, faz o
+  teste falhar com uma mensagem apontando qual.
+- Faz o mesmo para toda **rota de API** do painel (exige `lerSessao()` antes do banco).
+- Prova, na lista de inscritos, que sem sessão válida a página é interrompida **antes de consultar o banco**.
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,
@@ -355,7 +403,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 240 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 295 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
