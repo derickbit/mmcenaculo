@@ -19,8 +19,8 @@ npm test
 Isso roda todos os testes uma vez (usa o [Vitest](https://vitest.dev)). Resultado esperado:
 
 ```
- Test Files  15 passed (15)
-      Tests  192 passed (192)
+ Test Files  17 passed (17)
+      Tests  204 passed (204)
 ```
 
 Os arquivos de teste ficam ao lado do código que testam e terminam em `.test.ts`.
@@ -227,6 +227,27 @@ O admin gera um **link de uso único** para uma pessoa criar a conta dela: ele e
 Há duas proteções sobrepostas contra reuso de convite (a checagem do estado e a condição dentro da transação). Foi confirmado que os
 testes falham se **as duas** forem removidas.
 
+### 14. Página do convite: `app/convite/[codigo]/actions.test.ts` (5 testes, com banco) e `convite.test.tsx` (7 testes, de tela)
+
+A pessoa convidada abre o link, vê o **usuário que o admin escolheu** já preenchido (só para leitura) e define apenas a senha.
+
+*A ação do servidor (com banco):*
+
+- Cria a conta, **já entra no painel** (o cookie de sessão gravado é válido e é do usuário certo) e manda para `/admin`.
+- Senhas diferentes ou senha curta: o aviso volta ao lado do campo e o convite **não é gasto**.
+- Link inválido ou já usado: a mesma mensagem, sem conta e sem cookie.
+- **Limite de tentativas** por IP (10 a cada 15 minutos): a 11ª é recusada mesmo com um convite válido, que continua livre; outro IP não é afetado.
+
+*As telas (num navegador simulado):*
+
+- O formulário mostra o usuário só para leitura; senha curta ou senhas diferentes **avisam ao lado do campo sem enviar nada**; uma senha
+  boa envia o código do convite e a senha; o aviso do servidor aparece **sem apagar o que foi digitado**.
+- A página mostra o formulário para um convite válido. Para link inexistente, vencido, já usado ou revogado, mostra **exatamente a
+  mesma mensagem**, sem o nome do usuário e sem formulário: ninguém descobre se um código já existiu.
+
+A página também pede ao navegador para **não repassar o código do endereço** a outros sites (`no-referrer`) e fica fora dos buscadores.
+O link inválido responde com o mesmo status de um válido (200), para o código de resposta também não entregar nada.
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,
@@ -280,7 +301,7 @@ sobe um Postgres temporário, instala as dependências, gera o client do Prisma,
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
-**todos os 192 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
+**todos os 204 testes rodam lá**, inclusive os de notas. Os valores de banco e de `SESSION_SECRET` no `ci.yml` são falsos,
 só para o build e os testes funcionarem; nenhum segredo real é usado.
 
 ## Como adicionar um teste novo
