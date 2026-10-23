@@ -95,6 +95,10 @@ Há dois cargos: **administrador** (o dono do sistema, **só um**) e **coordena�
 - Variáveis de ambiente na Vercel: `DATABASE_URL`, `SESSION_SECRET` e `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`.
 - Os ícones do site (`app/icon.png` e `app/apple-icon.png`) foram gerados a partir de `public/images/logo.png` sobre o azul da marca.
 
+## Privacidade (LGPD)
+
+A página pública `/privacidade` explica quais dados são pedidos e por quê; os formulários têm consentimento (obrigatório e datado). Os dados pessoais ficam 1 ano depois do evento e `npm run lgpd:limpar` apaga o que passou do prazo. Mapa dos dados, rotina de limpeza e roteiro para pedidos de exclusão: [docs/LGPD.md](docs/LGPD.md).
+
 ## Backup
 
 O plano grátis do Supabase não tem backup automático. `npm run backup` salva todas as tabelas num arquivo (só lê o banco) e `npm run backup:restaurar -- <arquivo>` devolve esse arquivo para um banco vazio. Passo a passo, cuidados e como foi testado: [docs/BACKUP.md](docs/BACKUP.md).

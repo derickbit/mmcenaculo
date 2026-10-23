@@ -377,6 +377,17 @@ esse administrador. O script mostra qual banco vai mexer e pede confirmação an
 
 Conferidos por quebra proposital: o servidor não exigir o consentimento, não gravar a data do aceite e o formulário não conferir a caixinha; cada um derruba pelo menos um teste.
 
+### Limpeza por prazo de guarda (`lib/retencao.test.ts`)
+
+Contra o banco de testes, com um "agora" fixo (os testes não envelhecem) e dados criados e apagados pelo próprio teste.
+
+- O limite é 12 meses antes de agora, e o evento termina no início mais a duração em dias.
+- Um evento já vencido tem as inscrições (adultos e Kids), as notas e a lista de espera antiga apagadas; o evento em si fica.
+- Conta o **fim** do evento, não o início: um evento de 3 dias que terminou depois do limite não vence.
+- O que ainda está no prazo não é tocado; só olhar (`levantarVencidos`) não apaga nada.
+
+Conferidos por quebra proposital: contar o início em vez do fim, apagar Kids sem filtro, a lista de espera nunca vencer e o prazo errado (6 meses); cada um derruba pelo menos um teste. O script (`npm run lgpd:limpar`) foi conferido à mão num banco temporário: sem `--apagar` não apaga, respondendo "nao" não apaga, respondendo "sim" apaga só o vencido.
+
 ### Backup e restauração (`lib/backup.test.ts`)
 
 Rodam contra um banco falso em memória. A ida e volta com banco de verdade foi conferida à mão num banco temporário (ver `docs/BACKUP.md`).

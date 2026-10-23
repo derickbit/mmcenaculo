@@ -70,7 +70,7 @@ export default function PrivacidadePage() {
         <p>
           As inscrições ficam guardadas por até <strong>{PRAZO_GUARDA_TEXTO} depois do evento</strong>, e os cadastros da lista de espera por até{" "}
           <strong>{PRAZO_GUARDA_TEXTO} depois de feitos</strong>. Esse prazo existe porque o movimento faz dois Cenáculos por ano e o Cenaculão, no fim do ano, é só para
-          quem já fez o curso. Depois do prazo, os dados são apagados, inclusive das cópias de segurança.
+          quem já fez o curso. Depois do prazo, os dados são apagados do site. As cópias de segurança são guardadas por, no máximo, o mesmo prazo e depois descartadas.
         </p>
 
         <h2 className={titulo}>Seus direitos</h2>
@@ -84,7 +84,7 @@ export default function PrivacidadePage() {
         <p className="mt-3">
           É só escrever para{" "}
           <a href={`mailto:${EMAIL_PRIVACIDADE}`} className="text-cenaculo-blue font-bold underline">{EMAIL_PRIVACIDADE}</a>, dizendo o nome usado na inscrição e o evento. Respondemos em
-          até {PRAZO_RESPOSTA_DIAS} dias. Para sua segurança, podemos pedir uma confirmação de que o pedido é realmente seu.
+          até {PRAZO_RESPOSTA_DIAS} dias. Quando o pedido é de exclusão, apagamos os dados do site e as cópias de segurança são descartadas dentro do prazo acima. Para sua segurança, podemos pedir uma confirmação de que o pedido é realmente seu.
         </p>
 
         <h2 className={titulo}>Crianças</h2>
