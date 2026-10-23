@@ -42,6 +42,8 @@ Plataforma web desenvolvida para o **Movimento Mariano Cenáculo**, para substit
 - Limite de tentativas no login (por usuário e por IP), na inscrição e na lista de espera; proteção contra robôs nos formulários públicos.
 - Login com mensagem de erro genérica, para não revelar quais usuários existem.
 
+Os valores dos limites, o motivo de cada um e os limites conhecidos de cada proteção estão em [docs/SEGURANCA.md](docs/SEGURANCA.md).
+
 ## Modelo de dados
 
 `Evento`, `Inscricao`, `Observacao`, `PreCadastro`, `Foto`, `Usuario`, `Membro`, `Atividade` e `Presenca`. O esquema está em [`prisma/schema.prisma`](prisma/schema.prisma).
