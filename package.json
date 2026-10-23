@@ -11,7 +11,8 @@
     "admin:criar": "tsx scripts/primeiro-admin.ts criar",
     "admin:redefinir-senha": "tsx scripts/primeiro-admin.ts redefinir",
     "backup": "tsx scripts/backup.ts salvar",
-    "backup:restaurar": "tsx scripts/backup.ts restaurar"
+    "backup:restaurar": "tsx scripts/backup.ts restaurar",
+    "lgpd:limpar": "tsx scripts/lgpd-limpar.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
