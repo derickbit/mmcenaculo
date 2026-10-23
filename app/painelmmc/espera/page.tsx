@@ -5,6 +5,8 @@ import { exigirSessao, exigirSessaoPagina } from "@/lib/auth";
 
 export const revalidate = 0;
 
+const ROTULOS_TIPO: Record<string, string> = { CENACULO: "Cenáculo", KIDS: "Cenáculo Kids", CENACULAO: "Cenaculão" };
+
 export default async function EsperaPage({ searchParams }: { searchParams: Promise<{ tipo?: string }> }) {
   // A página mostra dados da coordenação: confere a sessão no banco (conta ativa), sem depender só do proxy.
   await exigirSessaoPagina();
@@ -20,6 +22,10 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
     where: whereClause,
     orderBy: { criadoEm: 'desc' }
   });
+
+  const contagem = new Map<string, number>();
+  for (const p of preCadastros) contagem.set(p.tipo, (contagem.get(p.tipo) ?? 0) + 1);
+  const porTipo = [...contagem.entries()];
 
   async function excluirPreCadastro(formData: FormData) {
     "use server";
@@ -37,6 +43,9 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
           <h1 className="text-3xl font-extrabold text-cenaculo-blue">Lista de Espera</h1>
           <p className="text-gray-600 mt-2">
             Contatos aguardando a abertura de novas vagas. Total: <span className="font-bold">{preCadastros.length}</span>
+            {!tipoFiltro && porTipo.length > 0 && (
+              <span className="text-gray-500"> ({porTipo.map(([tipo, n]) => `${ROTULOS_TIPO[tipo] ?? tipo}: ${n}`).join(" · ")})</span>
+            )}
           </p>
         </div>
         
@@ -61,14 +70,14 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
                   
                   <td className="p-4">
                     <span className="bg-blue-100 text-cenaculo-blue px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
-                      {pre.tipo}
+                      {ROTULOS_TIPO[pre.tipo] ?? pre.tipo}
                     </span>
                   </td>
                   
                   <td className="p-4">
                     <div className="font-bold text-gray-900">{pre.nome}</div>
                     <div className="text-xs text-gray-400 mt-1">
-                      Registrado em: {new Date(pre.criadoEm).toLocaleDateString('pt-BR')}
+                      Registrado em: {new Date(pre.criadoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                     </div>
                   </td>
                   
