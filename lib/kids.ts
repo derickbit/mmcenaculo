@@ -1,6 +1,8 @@
 // Constantes e funções do Cenáculo Kids usadas pelo formulário, pelo painel e pela validação.
 // Arquivo simples de propósito (sem bibliotecas), para poder ser usado também no navegador.
 
+import { EMAIL_PRIVACIDADE, PRAZO_GUARDA_TEXTO } from "./privacidade";
+
 export const PARENTESCOS = ["MAE", "PAI", "AVO", "TIO", "RESPONSAVEL_LEGAL", "OUTRO"] as const;
 export type Parentesco = (typeof PARENTESCOS)[number];
 
@@ -31,9 +33,11 @@ export function foraDaFaixaKids(nascimento: Date, dataEvento: Date): boolean {
   return idade < FAIXA_KIDS.min || idade > FAIXA_KIDS.max;
 }
 
-// Texto do aceite do responsável (LGPD). Rascunho a ser revisado pela coordenação antes do lançamento (passo 9).
+// Texto do aceite do responsável (LGPD). A coordenação deve ler e aprovar antes do lançamento.
 export const TEXTO_CONSENTIMENTO =
-  "Declaro que sou responsável pela criança acima e autorizo o Cenáculo a usar os dados informados neste formulário " +
-  "somente para organizar a participação dela no evento e para entrar em contato comigo. Informei apenas o necessário. " +
-  "Se eu informar alergia, restrição alimentar ou uso de medicação, autorizo o uso dessa informação apenas para o cuidado " +
-  "da criança durante o evento. Sei que posso pedir a correção ou a exclusão desses dados a qualquer momento, falando com a coordenação.";
+  "Declaro que sou o responsável legal pela criança acima e autorizo o Movimento Mariano Cenáculo (MMC) a usar os dados " +
+  "informados neste formulário somente para organizar a participação dela no evento e para entrar em contato comigo. " +
+  "Informei apenas o necessário. Se eu informar alergia, restrição alimentar ou uso de medicação, autorizo o uso dessa " +
+  "informação apenas para o cuidado da criança durante o evento. Os dados ficam guardados por até " + PRAZO_GUARDA_TEXTO +
+  " depois do evento e depois são apagados. Sei que posso pedir acesso, correção ou exclusão a qualquer momento pelo e-mail " +
+  EMAIL_PRIVACIDADE + ".";

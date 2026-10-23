@@ -161,6 +161,7 @@ export default function Home() {
             <div className="text-center md:text-left">
               <p>&copy; 2025 - Equipe Cenáculo. Todos os direitos reservados.</p>
               <p className="mt-1">Contato: <a href="mailto:mmcenaculopel@gmail.com" className="hover:text-cenaculo-gold transition">mmcenaculopel@gmail.com</a></p>
+              <p className="mt-1"><Link href="/privacidade" className="hover:text-cenaculo-gold transition underline">Política de Privacidade</Link></p>
             </div>
             
             <div className="mt-4 md:mt-0">

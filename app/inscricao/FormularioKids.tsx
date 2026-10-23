@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { CampoIsca, useAberturaDoFormulario } from "./antiRobo";
 import { mascararTelefone, telefoneValido } from "@/lib/telefone";
 import { FAIXA_KIDS, PARENTESCOS, PARENTESCO_ROTULOS, TEXTO_CONSENTIMENTO, foraDaFaixaKids } from "@/lib/kids";
@@ -271,6 +272,11 @@ export default function FormularioKids({
             <span className="text-sm text-gray-700">{TEXTO_CONSENTIMENTO}</span>
           </label>
           {erro("consentimento")}
+          <p className="text-xs text-gray-500">
+            Leia a{" "}
+            <Link href="/privacidade" target="_blank" className="underline font-semibold text-cenaculo-blue">Política de Privacidade</Link>{" "}
+            para saber como cuidamos dos dados.
+          </p>
         </section>
 
         <button
