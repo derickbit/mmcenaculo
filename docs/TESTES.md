@@ -368,6 +368,15 @@ temporário: responder "não" na confirmação não muda nada; senhas diferentes
 recusado**; redefinir funciona. Depois, com o site compilado, a senha nova entra, a antiga não, e a tela de gestão de usuários abre para
 esse administrador. O script mostra qual banco vai mexer e pede confirmação antes.
 
+### Privacidade e consentimento (`lib/privacidade.test.ts`, `lib/inscricao.test.ts`, `app/api/inscricao/route.test.ts`, `app/inscricao/formularios.test.tsx`)
+
+- Os textos de consentimento (adulto e Kids) trazem o e-mail de contato e o prazo de guarda que vêm das mesmas constantes da página `/privacidade`, e dizem que a informação de saúde só serve para o cuidado no evento.
+- O adulto só se inscreve **marcando o consentimento** (há dado de saúde no formulário): o servidor recusa `false`, ausente, `"true"`, `1` e `"on"` e não grava nada.
+- A **data do aceite é marcada pelo servidor**: uma data enviada pelo navegador é ignorada.
+- O formulário não envia sem a caixinha marcada, avisa ao lado dela e mantém o que a pessoa digitou; marcada, o aceite vai junto com a inscrição.
+
+Conferidos por quebra proposital: o servidor não exigir o consentimento, não gravar a data do aceite e o formulário não conferir a caixinha; cada um derruba pelo menos um teste.
+
 ### Backup e restauração (`lib/backup.test.ts`)
 
 Rodam contra um banco falso em memória. A ida e volta com banco de verdade foi conferida à mão num banco temporário (ver `docs/BACKUP.md`).

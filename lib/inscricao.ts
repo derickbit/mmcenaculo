@@ -78,6 +78,8 @@ export const inscricaoAdultoSchema = z.object({
   restricaoAlimentar: opcional("Restrição alimentar", 300),
   atendimentoEspecial: opcional("Atendimento especial", 300),
   comoConheceu: opcional("Como conheceu", 120),
+  // Há dado de saúde no formulário: o aceite é obrigatório. A data do aceite é gravada pelo servidor.
+  consentimento: z.literal(true, { error: "É necessário concordar com o termo de consentimento." }),
 });
 
 // ---------- Kids ----------

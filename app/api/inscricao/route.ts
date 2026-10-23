@@ -77,7 +77,26 @@ export async function POST(request: Request) {
       const r = validar(inscricaoAdultoSchema, dados);
       if (!r.ok) return erro(400, `Confira os dados informados: ${Object.values(r.erros)[0]}`, { campos: r.erros });
 
-      await prisma.inscricao.create({ data: { ...r.dados, eventoId: evento.id } });
+      // Campos explícitos: só entra o que foi combinado. O aceite (LGPD) é datado pelo servidor.
+      await prisma.inscricao.create({
+        data: {
+          eventoId: evento.id,
+          nomeCompleto: r.dados.nomeCompleto,
+          email: r.dados.email,
+          telefone: r.dados.telefone,
+          cidade: r.dados.cidade,
+          dataNascimento: r.dados.dataNascimento,
+          instagram: r.dados.instagram,
+          jaFezCenaculo: r.dados.jaFezCenaculo,
+          paroquiaAtuante: r.dados.paroquiaAtuante,
+          problemaSaude: r.dados.problemaSaude,
+          medicacaoControlada: r.dados.medicacaoControlada,
+          restricaoAlimentar: r.dados.restricaoAlimentar,
+          atendimentoEspecial: r.dados.atendimentoEspecial,
+          comoConheceu: r.dados.comoConheceu,
+          consentimentoEm: new Date(),
+        },
+      });
     }
 
     // 7. Resposta sem nenhum dado da inscrição (nem de saúde)

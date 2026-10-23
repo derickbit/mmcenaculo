@@ -111,6 +111,9 @@ export default function ListaEspera() {
           />
           {erro("telefone", erroTelefone)}
         </div>
+        <p className="text-xs text-gray-500 text-center">Usamos seus dados só para avisar quando abrirem vagas. Veja a{" "}
+          <Link href="/privacidade" target="_blank" className="underline font-semibold text-cenaculo-blue">Política de Privacidade</Link>.
+        </p>
         <button type="submit" className="w-full bg-cenaculo-blue text-white font-bold py-3.5 rounded-md hover:bg-[#1a1d7a] transition shadow-md mt-2">
           Quero ser Avisado!
         </button>

@@ -1,10 +1,12 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { listaParoquias } from "@/lib/paroquias";
 import { CampoIsca, useAberturaDoFormulario } from "./antiRobo";
 import { CAMPO_ABERTURA } from "@/lib/honeypot";
 import { mascararTelefone, telefoneValido } from "@/lib/telefone";
+import { TEXTO_CONSENTIMENTO_ADULTO } from "@/lib/privacidade";
 
 // Aqui está a correção: A função agora recebe as variáveis corretamente!
 export default function Formulario({ 
@@ -23,6 +25,7 @@ export default function Formulario({
   const [dataNascimento, setDataNascimento] = useState("");
   const [jaFezCenaculo, setJaFezCenaculo] = useState("Não");
   const [qualCenaculo, setQualCenaculo] = useState("");
+  const [consentimento, setConsentimento] = useState(false);
 
   const abertura = useAberturaDoFormulario();
   const [erros, setErros] = useState<Record<string, string>>({});
@@ -51,16 +54,18 @@ export default function Formulario({
     if (!telefoneValido(telefone)) novosErros.telefone = "Telefone inválido. Use DDD + número.";
     const partesData = dataNascimento.split("/");
     if (partesData.length !== 3 || partesData[2].length !== 4) novosErros.dataNascimento = "Informe a data no formato DD/MM/AAAA.";
+    if (!consentimento) novosErros.consentimento = "É necessário concordar com o termo de consentimento.";
     setErros(novosErros);
     if (Object.keys(novosErros).length > 0) return;
 
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const data = Object.fromEntries(formData.entries());
+    const data: Record<string, unknown> = Object.fromEntries(formData.entries());
 
     // Injeta o ID do evento atual para o backend saber onde salvar
     data.eventoId = eventoId;
+    data.consentimento = consentimento;
     data[CAMPO_ABERTURA] = String(abertura.current); // momento em que o formulário foi aberto (proteção contra robôs)
 
     data.jaFezCenaculo = jaFezCenaculo === "Sim" ? `Fez o ${qualCenaculo}º` : "Não fez";
@@ -237,7 +242,27 @@ export default function Formulario({
           </div>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-4 space-y-3">
+          <label className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-200 rounded-md cursor-pointer">
+            <input
+              type="checkbox"
+              name="consentimento"
+              checked={consentimento}
+              onChange={(e) => {
+                setConsentimento(e.target.checked);
+                setErros((atual) => ({ ...atual, consentimento: "" }));
+              }}
+              required
+              className="mt-1 h-5 w-5 shrink-0"
+            />
+            <span className="text-sm text-gray-700">{TEXTO_CONSENTIMENTO_ADULTO}</span>
+          </label>
+          {erro("consentimento")}
+          <p className="text-xs text-gray-500">
+            Leia a{" "}
+            <Link href="/privacidade" target="_blank" className="underline font-semibold text-cenaculo-blue">Política de Privacidade</Link>{" "}
+            para saber como cuidamos dos dados.
+          </p>
           <button type="submit" disabled={loading} className="w-full bg-cenaculo-blue text-white font-bold py-4 px-8 rounded-md hover:bg-[#1a1d7a] disabled:opacity-50 shadow-md text-lg">
             {loading ? "Enviando..." : "Enviar Inscrição"}
           </button>
