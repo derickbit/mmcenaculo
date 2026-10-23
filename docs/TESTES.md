@@ -368,6 +368,19 @@ temporário: responder "não" na confirmação não muda nada; senhas diferentes
 recusado**; redefinir funciona. Depois, com o site compilado, a senha nova entra, a antiga não, e a tela de gestão de usuários abre para
 esse administrador. O script mostra qual banco vai mexer e pede confirmação antes.
 
+### Backup e restauração (`lib/backup.test.ts`)
+
+Rodam contra um banco falso em memória. A ida e volta com banco de verdade foi conferida à mão num banco temporário (ver `docs/BACKUP.md`).
+
+- A ordem das tabelas põe cada "pai" antes das "filhas" (senão a restauração quebra por chave estrangeira); recusa dependência circular.
+- O backup inclui todas as tabelas do schema (uma tabela nova entra sozinha) e deixa de fora só os contadores de limite.
+- As datas vão para o arquivo como texto e voltam como data.
+- Restaurar num banco que já tem dados é **recusado** e não altera nada.
+- Arquivo inválido ou com tabela desconhecida é recusado.
+- Se a restauração falhar no meio, nada fica pela metade.
+
+Conferidos por quebra proposital: ignorar "banco não vazio", ignorar a ordem e não converter datas, e cada um derruba pelo menos um teste.
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,
@@ -382,10 +395,10 @@ docker exec mmcenaculo_postgres psql -U admin -d postgres -c "CREATE DATABASE ce
 Depois aplicar o schema nele (ajuste usuário e senha se os seus forem diferentes):
 
 ```bash
-DATABASE_URL="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test" npx prisma db push
+DATABASE_URL="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test" npx prisma migrate deploy
 ```
 
-(No PowerShell: `$env:DATABASE_URL="..."; npx prisma db push`.)
+(No PowerShell: `$env:DATABASE_URL="..."; npx prisma migrate deploy`.)
 
 **Ligar nos testes:** no `.env`, adicionar
 
@@ -393,7 +406,7 @@ DATABASE_URL="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_tes
 DATABASE_URL_TESTE="postgresql://painelmmc:adminpassword@localhost:5432/cenaculodb_test"
 ```
 
-Se alguma tabela mudar no `prisma/schema.prisma`, rode o `db push` de novo também no banco de testes.
+Se uma migration nova for criada, rode o `migrate deploy` de novo também no banco de testes.
 
 **Proteções:**
 
@@ -417,7 +430,7 @@ Todos os testes com banco seguem o mesmo roteiro:
 ## Verificação automática no GitHub (CI)
 
 O arquivo `.github/workflows/ci.yml` roda a cada push na `main` e a cada Pull Request, numa máquina do GitHub:
-sobe um Postgres temporário, instala as dependências, gera o client do Prisma, cria as tabelas (`prisma db push`) e
+sobe um Postgres temporário, instala as dependências, gera o client do Prisma, aplica as migrations (`prisma migrate deploy`), confere que o schema não tem mudança sem migration e
 roda o lint, o `npm test` e o build. O resultado aparece na aba **Actions** do repositório.
 
 Como o CI tem o próprio banco (`DATABASE_URL_TESTE` já vem configurada no arquivo, apontando para um banco `..._test`),
