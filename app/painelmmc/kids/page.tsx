@@ -50,7 +50,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
 
       <div className="mb-6 bg-cenaculo-blue text-white px-6 py-4 rounded-xl shadow flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="font-bold">
-          Total: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
+          {eventoId ? "Total neste evento" : "Total em todos os eventos"}: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
         </div>
         <BotaoExportar href={`/api/painelmmc/exportar/kids${eventoId ? `?eventoId=${encodeURIComponent(eventoId)}` : ""}`} />
       </div>
@@ -61,6 +61,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
             <thead>
               <tr className="bg-gray-50 text-gray-700">
                 <th className="p-4 font-bold text-sm">Criança</th>
+                <th className="p-4 font-bold text-sm">Evento</th>
                 <th className="p-4 font-bold text-sm">Responsável</th>
                 <th className="p-4 font-bold text-sm">Saúde</th>
                 <th className="p-4 font-bold text-sm">Ações</th>
@@ -82,7 +83,14 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
                           Fora da faixa {FAIXA_KIDS.min}–{FAIXA_KIDS.max}
                         </span>
                       )}
-                      <div className="text-xs text-gray-400 mt-2">{i.evento.nome}</div>
+                    </td>
+
+                    <td className="p-4 align-top w-1/6 text-sm">
+                      <div className="font-bold text-cenaculo-blue">{i.evento.nome}</div>
+                      <div className="text-xs text-gray-500 mt-1">{i.evento.dataInicio.toLocaleDateString("pt-BR", { timeZone: "UTC" })}</div>
+                      <div className="text-xs text-gray-400 mt-2">
+                        Inscrito em {i.criadoEm.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                      </div>
                     </td>
 
                     <td className="p-4 align-top w-1/4 text-sm">
@@ -124,7 +132,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
               })}
               {inscricoes.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-12 text-center text-gray-500 text-lg">
+                  <td colSpan={5} className="p-12 text-center text-gray-500 text-lg">
                     Nenhuma inscrição Kids encontrada.
                   </td>
                 </tr>

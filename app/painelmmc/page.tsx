@@ -46,7 +46,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-cenaculo-blue">Inscrições Recebidas</h1>
-          <p className="text-gray-600 mt-2">Gerencie os participantes inscritos em cada retiro.</p>
+          <p className="text-gray-600 mt-2">Gerencie os participantes inscritos em cada retiro. Cada inscrição mostra a qual evento pertence.</p>
         </div>
         
         <div className="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
@@ -57,7 +57,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
       <div className="mb-6 bg-cenaculo-blue text-white px-6 py-4 rounded-xl shadow flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="font-bold">
-          Total neste evento: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
+          {eventoSelecionadoId ? "Total neste evento" : "Total em todos os eventos"}: <span className="text-cenaculo-gold text-xl ml-2">{inscricoes.length}</span>
         </div>
         <BotaoExportar href={`/api/painelmmc/exportar/inscritos${eventoSelecionadoId ? `?eventoId=${encodeURIComponent(eventoSelecionadoId)}` : ""}`} />
       </div>

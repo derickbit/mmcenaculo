@@ -44,3 +44,6 @@ next-env.d.ts
 
 # exceção: modelo de variáveis sem valores reais
 !.env.example
+
+# backups do banco (dados pessoais)
+/backups/

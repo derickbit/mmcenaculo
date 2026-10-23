@@ -46,8 +46,11 @@ jobs:
       # Gera o client do Prisma (os tipos do banco) antes de checar o código.
       - run: npx prisma generate
 
-      # Cria as tabelas no Postgres temporário.
-      - run: npx prisma db push
+      # Cria as tabelas no Postgres temporário aplicando as migrations (prisma/migrations), do jeito que vale em produção.
+      - run: npx prisma migrate deploy
+
+      # Trava: se o schema.prisma mudou sem uma migration correspondente, o CI falha aqui (código ≠ banco).
+      - run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
 
       - run: npm run lint
       - run: npm test

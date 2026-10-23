@@ -56,7 +56,7 @@ cd mmcenaculo
 npm install
 docker compose up -d          # PostgreSQL local
 cp .env.example .env          # preencha as variáveis
-npx prisma db push            # cria as tabelas
+npx prisma migrate deploy      # cria as tabelas (aplica prisma/migrations)
 npm run dev
 ```
 
@@ -88,9 +88,14 @@ Há dois cargos: **administrador** (o dono do sistema, **só um**) e **coordena�
 ## Deploy (Vercel + Supabase)
 
 - **Build Command da Vercel:** deixe o padrão (`npm run build`, que gera o client do Prisma e compila o site). **Não rode `prisma db push` no build**: ele mudaria o banco de produção automaticamente a cada deploy, sem ninguém revisar o SQL (e foi a causa de um deploy falho, quando se recusou a apagar uma coluna com dados).
-- **Mudanças no banco em produção** são feitas à mão, com um SQL gerado e testado antes (`prisma migrate diff`), no SQL Editor do Supabase. Mudanças que apagam algo vão em **duas etapas**: primeiro acrescentar o novo (antes do deploy) e só depois remover o antigo (depois do deploy).
+- **Histórico do banco:** as mudanças ficam em `prisma/migrations` (a `0_init` é o ponto de partida). Para mudar uma tabela: edite o `schema.prisma`, rode `npx prisma migrate dev --name o_que_mudou` (gera e aplica no banco local) e commite a pasta nova. O CI falha se o schema mudar sem migration.
+- **Mudanças no banco em produção** são feitas à mão, com o SQL da migration revisado e testado antes, no SQL Editor do Supabase. Mudanças que apagam algo vão em **duas etapas**: primeiro acrescentar o novo (antes do deploy) e só depois remover o antigo (depois do deploy).
 - Variáveis de ambiente na Vercel: `DATABASE_URL`, `SESSION_SECRET` e `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`.
 - Os ícones do site (`app/icon.png` e `app/apple-icon.png`) foram gerados a partir de `public/images/logo.png` sobre o azul da marca.
+
+## Backup
+
+O plano grátis do Supabase não tem backup automático. `npm run backup` salva todas as tabelas num arquivo (só lê o banco) e `npm run backup:restaurar -- <arquivo>` devolve esse arquivo para um banco vazio. Passo a passo, cuidados e como foi testado: [docs/BACKUP.md](docs/BACKUP.md).
 
 ## Testes
 
