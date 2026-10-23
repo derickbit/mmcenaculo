@@ -19,6 +19,7 @@ const adulto = {
   telefone: "(53) 99999-9999",
   cidade: "Pelotas",
   dataNascimento: "1990-05-20",
+  consentimento: true,
 };
 
 const kids = {
@@ -31,6 +32,16 @@ const kids = {
   parentesco: "MAE",
   consentimento: true,
 };
+
+describe("inscrição de adulto: consentimento", () => {
+  it("é obrigatório e só vale o verdadeiro de verdade", () => {
+    for (const consentimento of [false, undefined, "true", 1, "on"]) {
+      const r = validar(inscricaoAdultoSchema, { ...adulto, consentimento });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.erros.consentimento).toMatch(/consentimento/);
+    }
+  });
+});
 
 describe("inscrição de adulto", () => {
   it("aceita um cadastro completo e normaliza os dados", () => {

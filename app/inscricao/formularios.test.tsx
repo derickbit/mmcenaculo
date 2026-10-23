@@ -43,6 +43,7 @@ describe("formulário de adulto", () => {
     digitar(container, 'input[name="telefone"]', telefone);
     digitar(container, 'input[name="cidade"]', "Pelotas");
     digitar(container, 'input[placeholder="DD/MM/AAAA"]', "20051990");
+    fireEvent.click(container.querySelector('input[name="consentimento"]') as HTMLInputElement);
   };
   const abrir = () => render(<Formulario eventoId="evento-1" eventoNome="Cenáculo" eventoTipo="CENACULO" />);
 
@@ -59,6 +60,20 @@ describe("formulário de adulto", () => {
     expect(Math.abs(Date.now() - Number(corpo.abertoEm))).toBeLessThan(60_000);
     expect(corpo.website ?? "").toBe(""); // o campo escondido continua vazio
     expect(corpo.dataNascimento).toBe("1990-05-20");
+    expect(corpo.consentimento).toBe(true); // o aceite do termo vai junto
+  });
+
+  it("sem marcar o consentimento não envia, avisa ao lado da caixinha e mantém o que foi digitado", async () => {
+    const chamada = simularEnvio();
+    const { container } = abrir();
+
+    preencher(container);
+    fireEvent.click(container.querySelector('input[name="consentimento"]') as HTMLInputElement); // desmarca
+    enviarFormulario(container);
+
+    expect(await screen.findByText("É necessário concordar com o termo de consentimento.")).toBeTruthy();
+    expect(chamada).not.toHaveBeenCalled();
+    expect(valorDe(container, 'input[name="nomeCompleto"]')).toBe("Maria da Silva");
   });
 
   it("telefone inválido não é enviado: o aviso aparece ao lado do campo e o que foi digitado continua lá", async () => {

@@ -39,6 +39,7 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
     telefone: "(53) 99999-9999",
     cidade: "Pelotas",
     dataNascimento: "1990-05-20",
+    consentimento: true,
     ...extra,
   });
 
@@ -90,6 +91,25 @@ describe.skipIf(!urlTeste)("POST /api/inscricao (banco de testes)", () => {
 
       const gravada = await prisma.inscricao.findFirst({ where: { eventoId: abertoId, email: `maia.${sufixo}@teste.com` } });
       expect(gravada?.problemaSaude).toBe("asma");
+    });
+
+    it("grava a data do aceite (LGPD), marcada pelo servidor", async () => {
+      const antes = Date.now();
+      const entrada = adulto(abertoId, { consentimentoEm: "1999-01-01T00:00:00Z" }); // data enviada pelo navegador é ignorada
+      expect((await enviar(entrada)).status).toBe(201);
+      const gravada = await prisma.inscricao.findFirstOrThrow({ where: { eventoId: abertoId, email: entrada.email } });
+      expect(gravada.consentimentoEm).not.toBeNull();
+      expect(gravada.consentimentoEm!.getTime()).toBeGreaterThanOrEqual(antes - 1000);
+    });
+
+    it("exige o consentimento e não grava nada sem ele", async () => {
+      for (const consentimento of [false, undefined, "true", "on"]) {
+        const entrada = adulto(abertoId, { consentimento });
+        const resposta = await enviar(entrada);
+        expect(resposta.status).toBe(400);
+        expect((await resposta.json()).campos.consentimento).toMatch(/consentimento/);
+        expect(await prisma.inscricao.count({ where: { eventoId: abertoId, email: entrada.email } })).toBe(0);
+      }
     });
 
     it("recusa evento que não está aberto e não grava nada", async () => {

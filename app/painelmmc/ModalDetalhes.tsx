@@ -78,6 +78,11 @@ export default function ModalDetalhes({ inscricao }: { inscricao: InscricaoAdmin
 
           <div className="col-span-1 md:col-span-2 border-t border-gray-100 pt-4">
              <p className="text-xs text-gray-400">Inscrição realizada em: {new Date(inscricao.criadoEm).toLocaleString('pt-BR')}</p>
+             <p className="text-xs text-gray-400">
+               {inscricao.consentimentoEm
+                 ? `Consentimento (LGPD) aceito em: ${new Date(inscricao.consentimentoEm).toLocaleString('pt-BR')}`
+                 : "Consentimento (LGPD): inscrição anterior à caixinha de consentimento."}
+             </p>
              {inscricao.evento && <p className="text-xs text-gray-400">Evento: {inscricao.evento.nome}</p>}
           </div>
         </div>

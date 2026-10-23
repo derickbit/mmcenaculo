@@ -50,6 +50,7 @@ model Inscricao {
   atendimentoEspecial String?
   comoConheceu        String?
   criadoEm            DateTime     @default(now())
+  consentimentoEm     DateTime?    // quando a pessoa aceitou o termo (LGPD); nulo = inscrição anterior à caixinha de consentimento
 
   eventoId            String
   evento              Evento       @relation(fields: [eventoId], references: [id], onDelete: Cascade)
