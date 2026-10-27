@@ -401,6 +401,35 @@ Rodam contra um banco falso em memória. A ida e volta com banco de verdade foi 
 
 Conferidos por quebra proposital: ignorar "banco não vazio", ignorar a ordem e não converter datas, e cada um derruba pelo menos um teste.
 
+## Testes de ponta a ponta (Playwright)
+
+Um navegador de verdade (Chromium) abre o site e faz o que uma pessoa faz, do começo ao fim. Pegam o tipo de erro que os outros testes não pegam:
+peças que funcionam sozinhas mas não juntas (como o bug do campo escondido do formulário, que descartava inscrições reais em silêncio).
+
+**Como rodar:** `npm run test:e2e` (na primeira vez, `npx playwright install chromium`). Leva cerca de 1 a 2 minutos: compila o site, sobe um
+servidor próprio na porta 3100 e roda os 14 cenários, um de cada vez. O relatório (com capturas de tela dos que falharem) fica em `playwright-report/`
+(`npx playwright show-report`).
+
+**Onde rodam:** num banco só deles, `cenaculodb_e2e_test`, no mesmo servidor do banco de testes. O comando cria o banco sozinho, aplica as migrations e
+cada arquivo de teste começa esvaziando e recriando o cenário (um Cenáculo aberto, um Kids aberto, a conta de administrador). **Não toca no seu banco local**
+nem no do Supabase. Pode deixar o `npm run dev` aberto: o Next separa as pastas do dev e do build.
+
+**Os cenários** (pasta `e2e/`):
+
+- *Público* (`publico.spec.ts`): com dois retiros abertos a pessoa escolhe qual; adulto sem o consentimento não envia e, com ele, a inscrição é gravada com e-mail
+  normalizado e data do aceite; o link da política abre a página de privacidade; robô que preenche o campo escondido recebe "sucesso" mas nada é gravado; Kids com
+  o termo do responsável; sem retiro aberto aparece a lista de espera e o cadastro é gravado.
+- *Painel* (`painel.spec.ts`): sem login o painel e a planilha parecem não existir (404); senha errada mostra a mensagem genérica; o administrador entra e vê a inscrição
+  com o evento; já logado, o endereço do login leva ao painel; a busca acha por e-mail; a planilha baixa como arquivo do Excel; "Sair do Sistema" fecha o painel; o admin gera
+  um convite, a pessoa cria a conta, a coordenação não vê "Usuários" e o link não vale uma segunda vez.
+
+**Conferidos por quebra proposital:** tirar o redirecionamento do login e fazer o honeypot nunca barrar; cada um derruba o cenário correspondente.
+
+**No GitHub:** o `ci.yml` tem um segundo trabalho (`e2e`) que baixa o Chromium e roda os mesmos cenários; se falhar, o relatório fica para baixar na aba Actions.
+
+**Cuidados ao escrever um cenário novo:** o formulário só aceita envios com mais de 1 segundo (honeypot), então o teste espera um instante antes de enviar;
+os limites de tentativas são por IP, então não repita o mesmo envio muitas vezes no mesmo arquivo (a lista é zerada a cada arquivo, junto com o resto do cenário).
+
 ## O banco de testes
 
 Os testes de banco **não usam o seu banco de desenvolvimento** nem o de produção. Usam um banco separado, `cenaculodb_test`,

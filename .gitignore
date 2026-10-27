@@ -47,3 +47,7 @@ next-env.d.ts
 
 # backups do banco (dados pessoais)
 /backups/
+
+# testes de ponta a ponta (Playwright)
+/test-results/
+/playwright-report/
