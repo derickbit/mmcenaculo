@@ -11,7 +11,7 @@ export default function FiltroEventos({ eventos, eventoSelecionadoId, rota = "/p
     <select 
       value={eventoSelecionadoId} 
       onChange={(e) => router.push(`${rota}?eventoId=${e.target.value}`)} 
-      className="p-2 border border-gray-300 rounded focus:ring-cenaculo-gold bg-gray-50 outline-none w-full md:w-auto"
+      className="p-2 border border-gray-300 rounded focus:ring-cenaculo-gold bg-gray-50 outline-none w-full min-w-0 md:w-auto"
     >
       <option value="">Todos os Eventos</option>
       {eventos.map(evento => (

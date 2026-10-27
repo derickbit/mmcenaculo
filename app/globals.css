@@ -4,3 +4,12 @@
   --color-cenaculo-blue: #0f1258;
   --color-cenaculo-gold: #bd9809;
 }
+
+/* No celular, campos com letra menor que 16px fazem o iPhone dar zoom sozinho ao tocar. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

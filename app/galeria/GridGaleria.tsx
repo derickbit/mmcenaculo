@@ -49,7 +49,7 @@ export default function GridGaleria({ fotos, eventoNome }: { fotos: { id: string
           </button>
 
           {/* Imagem em Tamanho Real */}
-          <div className="relative w-full h-full max-w-5xl max-h-[85vh] flex items-center justify-center">
+          <div className="relative w-full h-full max-w-5xl max-h-[85dvh] flex items-center justify-center">
             <img 
               src={fotoAtiva} 
               alt="Visualização completa" 

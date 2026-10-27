@@ -6,7 +6,7 @@ export default function FiltroEspera({ tipoAtual }: { tipoAtual: string }) {
   const router = useRouter();
 
   return (
-    <div className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
       <label className="text-sm font-bold text-gray-700 whitespace-nowrap">Filtrar por Interesse:</label>
       <select
         value={tipoAtual}

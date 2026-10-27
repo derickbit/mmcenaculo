@@ -407,7 +407,7 @@ Um navegador de verdade (Chromium) abre o site e faz o que uma pessoa faz, do co
 peças que funcionam sozinhas mas não juntas (como o bug do campo escondido do formulário, que descartava inscrições reais em silêncio).
 
 **Como rodar:** `npm run test:e2e` (na primeira vez, `npx playwright install chromium`). Leva cerca de 1 a 2 minutos: compila o site, sobe um
-servidor próprio na porta 3100 e roda os 20 cenários, um de cada vez. O relatório (com capturas de tela dos que falharem) fica em `playwright-report/`
+servidor próprio na porta 3100 e roda os 24 cenários, um de cada vez. O relatório (com capturas de tela dos que falharem) fica em `playwright-report/`
 (`npx playwright show-report`).
 
 **Onde rodam:** num banco só deles, `cenaculodb_e2e_test`, no mesmo servidor do banco de testes. O comando cria o banco sozinho, aplica as migrations e
@@ -423,6 +423,7 @@ nem no do Supabase. Pode deixar o `npm run dev` aberto: o Next separa as pastas 
   com o evento; já logado, o endereço do login leva ao painel; a busca acha por e-mail; a planilha baixa como arquivo do Excel; "Sair do Sistema" fecha o painel; o admin gera
   um convite, a pessoa cria a conta, a coordenação não vê "Usuários" e o link não vale uma segunda vez.
 
+- *Celular* (`celular.spec.ts`, tela de 390 px como um iPhone): o menu do site e o do painel são listas suspensas que abrem, levam à página e fecham; no painel, os inscritos viram cartões (sem colunas); nenhuma página, pública ou do painel, fica mais larga que a tela (sem rolagem para o lado).
 - *Segurança* (`seguranca.spec.ts`): todas as páginas trazem os cabeçalhos de segurança (CSP, nosniff, anti-embutir, referrer); o painel continua fora dos buscadores; nenhuma página pública nem do painel (inclusive onde o Cloudinary carrega) gera violação da política de conteúdo; a hidratação do Next funciona (a máscara de telefone só existe se o JavaScript rodou); outra página não consegue embutir o site.
 
 **Conferidos por quebra proposital:** tirar o redirecionamento do login, fazer o honeypot nunca barrar, tirar o `'unsafe-inline'` dos scripts da CSP e tirar o Cloudinary da CSP; cada um derruba o cenário correspondente.

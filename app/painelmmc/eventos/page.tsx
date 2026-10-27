@@ -83,18 +83,18 @@ async function criarEvento(formData: FormData) {
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-        <table className="w-full text-left min-w-[720px]">
-          <thead className="bg-gray-50">
+        <table className="w-full text-left md:min-w-[720px] block md:table">
+          <thead className="bg-gray-50 hidden md:table-header-group">
             <tr>
               <th className="p-4 font-semibold text-sm text-gray-600">Evento</th>
               <th className="p-4 font-semibold text-sm text-gray-600">Automação (Início / Fim)</th>
               <th className="p-4 font-semibold text-sm text-gray-600">Status Controle</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 block md:table-row-group">
             {eventos.map(evento => (
-              <tr key={evento.id} className="hover:bg-gray-50">
-                <td className="p-4 font-bold align-top">
+              <tr key={evento.id} className="block md:table-row py-2 md:py-0 hover:bg-gray-50">
+                <td className="block md:table-cell px-4 py-3 md:p-4 font-bold align-top">
                   <div className="flex items-center gap-3">
                     {evento.imagemCapa && (
                       <img src={evento.imagemCapa} alt="Capa" className="w-12 h-12 rounded object-cover shadow-sm" />
@@ -108,7 +108,7 @@ async function criarEvento(formData: FormData) {
                   </div>
                 </td>
                 
-                <td className="p-4 text-sm text-gray-600 align-top">
+                <td className="block md:table-cell px-4 py-3 md:p-4 text-sm text-gray-600 align-top">
                   {evento.dataAbertura ? (
                     <div className="space-y-1">
                       <p><span className="font-bold text-green-600">Abre:</span> {new Date(evento.dataAbertura).toLocaleDateString('pt-BR')} às {new Date(evento.dataAbertura).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
@@ -120,7 +120,7 @@ async function criarEvento(formData: FormData) {
                   )}
                 </td>
 
-                <td className="p-4 flex items-center gap-2 align-top">
+                <td className="px-4 py-3 md:p-4 flex items-center gap-2 align-top">
                   {/* O dropdown agora tem a opção 'AUTOMATICO' */}
                   <StatusDropdown eventoId={evento.id} statusAtual={evento.status} mudarStatus={mudarStatus} />
                   

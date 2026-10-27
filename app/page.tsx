@@ -49,7 +49,7 @@ export default function Home() {
               Fazer Inscrição
             </Link>
             <Link 
-              href="sobre" 
+              href="/sobre"
               className="bg-transparent border-2 border-gray-300 text-white font-bold text-lg py-4 px-10 rounded-full hover:border-white hover:bg-white/10 transition-all"
             >
               Conheça o Movimento
