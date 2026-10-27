@@ -99,7 +99,34 @@ públicos, sempre faça uma inscrição de verdade e confira que ela apareceu no
 - **Mudanças no banco de produção** só por SQL revisado e testado antes (ver README, seção Deploy). O build da Vercel não mexe no banco.
 - **Backup:** manual, ver [BACKUP.md](BACKUP.md).
 
-## 5. O que ainda falta (passos 9 e 11 do cronograma)
+## 5. Cabeçalhos de segurança (em `next.config.ts`)
 
-- LGPD: texto de consentimento revisado, aviso de privacidade, prazo de guarda e roteiro de exclusão de dados.
-- Cabeçalhos de segurança (CSP) e as vulnerabilidades apontadas pelo `npm audit` (nenhuma vem de pacotes adicionados nos passos anteriores).
+Todas as páginas respondem com:
+
+| Cabeçalho | Para quê |
+| --- | --- |
+| `Content-Security-Policy` | o navegador só carrega scripts, imagens, estilos e conexões do próprio site e do Cloudinary (galeria e envio de fotos); nenhum plugin (`object-src 'none'`); formulários só enviam para o próprio site; **ninguém consegue embutir o site em outra página** (`frame-ancestors 'none'`) |
+| `X-Frame-Options: DENY` | o mesmo contra embutir o site, para navegadores antigos |
+| `X-Content-Type-Options: nosniff` | o navegador não "adivinha" o tipo de um arquivo |
+| `Referrer-Policy: strict-origin-when-cross-origin` | links para fora do site não levam o endereço completo da página |
+| `Permissions-Policy` | desliga geolocalização, pagamento e USB, que o site não usa |
+
+- A CSP só vale na versão de **produção** (o servidor de desenvolvimento do Next precisa de `'unsafe-eval'`). Para ver o efeito na sua máquina: `npm run build` e `npm start`.
+- **Limite conhecido:** a CSP permite `'unsafe-inline'` em scripts e estilos, porque o Next injeta pequenos scripts na própria página. Um passo a mais seria um *nonce* por requisição (CSP mais rígida), que exigiria mudar o painel e as páginas para renderização dinâmica; fica como melhoria futura.
+- O HSTS (obrigar HTTPS) a Vercel já envia sozinha.
+- **Testes:** `e2e/seguranca.spec.ts` confere os cabeçalhos, que nenhuma página pública nem do painel (inclusive onde o Cloudinary carrega) gera violação da política, que a hidratação do Next funciona e que o site não pode ser embutido em outra página.
+- **Se algo do Cloudinary parar de funcionar** (por exemplo, o botão de envio de fotos no painel), suspeite primeiro da CSP: o console do navegador mostra "Refused to ..." dizendo qual endereço foi bloqueado, e basta liberá-lo em `next.config.ts`.
+
+## 6. Dependências (`npm audit`)
+
+Em outubro de 2026: de **16 avisos (1 crítico)** para **3 (todos da mesma origem)**.
+
+- **Next.js 16.2.10 → 16.4.3** (e `eslint-config-next` junto): corrigiu os avisos do próprio Next, incluindo falhas críticas (execução remota de código no otimizador de imagens e em `use cache`) e de contornar o proxy. Vários eram mais graves em servidores próprios; na Vercel parte já era mitigada pela plataforma, mas a atualização vale de qualquer jeito.
+- **Prisma 7.8 → 7.10.1** (CLI, client e adaptador, na mesma versão) e as dependências do `npm audit fix`.
+- **Aviso que ficou (aceito de propósito):** `next-cloudinary` → `@cloudinary-util/url-loader` → `zod 3` ("o zod pode esgotar a memória ao validar coleções enormes"). A correção exige trocar `next-cloudinary` por uma versão **nova e incompatível** (7.x), o que mexeria no botão de envio de fotos do painel, que não dá para testar sem uma conta real do Cloudinary. O risco prático é praticamente nulo: o zod desse pacote só valida configurações montadas pelo próprio painel, no navegador da coordenação, e não dados enviados por visitantes. **Quando atualizar:** junto de uma revisão do envio de fotos, testando um envio de verdade.
+- Como conferir de tempos em tempos: `npm audit --omit=dev` (só o que vai para produção).
+
+## 7. O que ainda falta
+
+- LGPD: passo 9 concluído (ver [LGPD.md](LGPD.md)). Falta a revisão do texto da `/privacidade` e dos termos pela coordenação (ou por quem entenda de LGPD) antes de abrir as inscrições.
+- Go-live (passo 12 do cronograma).

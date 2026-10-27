@@ -53,8 +53,18 @@ describe("painel fora dos buscadores", () => {
     const origens = regras.map((r) => r.source);
     expect(origens).toContain("/painelmmc/:path*");
     expect(origens).toContain("/api/painelmmc/:path*");
-    for (const regra of regras) {
+    for (const regra of regras.filter((r) => r.source.includes("painelmmc"))) {
       expect(regra.headers).toContainEqual({ key: "X-Robots-Tag", value: "noindex, nofollow" });
+    }
+  });
+
+  it("todas as páginas mandam os cabeçalhos de segurança", async () => {
+    const regras = await nextConfig.headers!();
+    const geral = regras.find((r) => r.source === "/:path*");
+    expect(geral).toBeDefined();
+    const chaves = geral!.headers.map((h) => h.key);
+    for (const esperado of ["X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy", "Permissions-Policy"]) {
+      expect(chaves).toContain(esperado);
     }
   });
 });
