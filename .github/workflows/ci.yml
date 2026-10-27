@@ -55,3 +55,53 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  # Testes de ponta a ponta: um navegador de verdade usa o site (build de produção) num banco só do e2e.
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: cenaculodb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d cenaculodb_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Valores falsos. O e2e cria o próprio banco (cenaculodb_e2e_test) no mesmo servidor, a partir desta URL.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/cenaculodb_test
+      DATABASE_URL_TESTE: postgresql://ci:ci@localhost:5432/cenaculodb_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npx prisma generate
+
+      # Baixa o navegador (Chromium) e as bibliotecas do sistema que ele precisa.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+
+      # Se algum teste falhar, guarda o relatório (com capturas de tela) para baixar na aba Actions.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: relatorio-e2e
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

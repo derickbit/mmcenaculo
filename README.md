@@ -109,7 +109,15 @@ O plano grátis do Supabase não tem backup automático. `npm run backup` salva 
 npm test
 ```
 
-Os testes cobrem a regra de status dos eventos e o registro de notas internas, e também rodam automaticamente no GitHub (aba **Actions**) a cada envio de código.
+Os testes cobrem as regras do sistema (eventos, inscrições, contas, limites, backup, limpeza de dados) e rodam automaticamente no GitHub (aba **Actions**) a cada envio de código. Detalhes em [docs/TESTES.md](docs/TESTES.md).
+
+Testes de ponta a ponta (um navegador de verdade usando o site: inscrição, painel, convite, planilha):
+
+```bash
+npm run test:e2e
+```
+
+Na primeira vez, baixe o navegador com `npx playwright install chromium`. O teste compila o site, sobe um servidor próprio (porta 3100) e usa um banco só para ele (`cenaculodb_e2e_test`, criado sozinho): não mexe no seu banco local.
 Como funcionam, o que cada um verifica e como criar o banco de testes: [docs/TESTES.md](docs/TESTES.md).
 
 ## Autor
