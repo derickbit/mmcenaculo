@@ -129,4 +129,3 @@ Em outubro de 2026: de **16 avisos (1 crítico)** para **3 (todos da mesma orige
 ## 7. O que ainda falta
 
 - LGPD: passo 9 concluído (ver [LGPD.md](LGPD.md)). Falta a revisão do texto da `/privacidade` e dos termos pela coordenação (ou por quem entenda de LGPD) antes de abrir as inscrições.
-- Go-live (passo 12 do cronograma).

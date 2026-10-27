@@ -3,8 +3,7 @@
 Plataforma web desenvolvida para o **Movimento Mariano Cenáculo**, para substituir o controle de inscrições feito com Wix e Google Forms. Reúne a página pública de divulgação e inscrição e um painel administrativo para a coordenação.
 
 - **Site:** https://mmcenaculo.vercel.app
-- **Status:** pronta e publicada; ainda sem uso real, previsto para o próximo evento.
-
+- **Status:** pronta e publicada; ainda sem uso real, previsto para maio de 2027.
 ## Funcionalidades
 
 **Área pública**
@@ -98,10 +97,6 @@ Há dois cargos: **administrador** (o dono do sistema, **só um**) e **coordena�
 ## Privacidade (LGPD)
 
 A página pública `/privacidade` explica quais dados são pedidos e por quê; os formulários têm consentimento (obrigatório e datado). Os dados pessoais ficam 1 ano depois do evento e `npm run lgpd:limpar` apaga o que passou do prazo. Mapa dos dados, rotina de limpeza e roteiro para pedidos de exclusão: [docs/LGPD.md](docs/LGPD.md).
-
-## Abrir as inscrições (go-live)
-
-Checklist para sair do modo de teste: limpar os dados de teste, criar os eventos reais, contas da coordenação, ensaio no celular e rotina depois de abrir. Veja [docs/GOLIVE.md](docs/GOLIVE.md).
 
 ## Backup
 
