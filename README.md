@@ -99,6 +99,10 @@ Há dois cargos: **administrador** (o dono do sistema, **só um**) e **coordena�
 
 A página pública `/privacidade` explica quais dados são pedidos e por quê; os formulários têm consentimento (obrigatório e datado). Os dados pessoais ficam 1 ano depois do evento e `npm run lgpd:limpar` apaga o que passou do prazo. Mapa dos dados, rotina de limpeza e roteiro para pedidos de exclusão: [docs/LGPD.md](docs/LGPD.md).
 
+## Abrir as inscrições (go-live)
+
+Checklist para sair do modo de teste: limpar os dados de teste, criar os eventos reais, contas da coordenação, ensaio no celular e rotina depois de abrir. Veja [docs/GOLIVE.md](docs/GOLIVE.md).
+
 ## Backup
 
 O plano grátis do Supabase não tem backup automático. `npm run backup` salva todas as tabelas num arquivo (só lê o banco) e `npm run backup:restaurar -- <arquivo>` devolve esse arquivo para um banco vazio. Passo a passo, cuidados e como foi testado: [docs/BACKUP.md](docs/BACKUP.md).
