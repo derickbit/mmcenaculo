@@ -66,7 +66,10 @@ DELETE FROM "Evento" WHERE id IN ('COLE-AQUI-O-ID-DO-EVENTO-DE-TESTE');
 ## 5. Infraestrutura (Derick)
 
 - [ ] **Vercel:** variáveis de ambiente de produção só estas: `DATABASE_URL`, `SESSION_SECRET` e `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` (`ADMIN_PASSWORD` já foi apagada). Build Command padrão (`npm run build`).
-- [ ] **Domínio:** hoje o site é `mmcenaculo.vercel.app`. Se for usar um domínio próprio, configurar na Vercel (**Settings → Domains**), esperar o HTTPS ficar ativo e atualizar os links de divulgação. O endereço antigo da Vercel continua funcionando.
+- [ ] **Domínio:** o movimento tem `mmcenaculo.com` (comprado pela Wix) e, hoje, o site do sistema é `mmcenaculo.vercel.app`. Dá para usar o domínio próprio: na Vercel (**Settings → Domains**) adiciona-se o domínio, a Vercel mostra os registros de DNS que precisam ser criados (um `A` para o domínio raiz e um `CNAME` para o `www`, ou só um `CNAME` para um subdomínio) e, no painel de DNS da Wix, criam-se esses registros. O HTTPS é emitido sozinho. O código não tem nenhum endereço fixo, então **nenhuma mudança de código é necessária**.
+  - **Cuidado:** se o `www.mmcenaculo.com` hoje mostra o site da Wix, apontar o domínio para a Vercel **tira o site da Wix do ar**. Duas formas seguras: (1) usar um **subdomínio** para o sistema, como `inscricoes.mmcenaculo.com` (ou `app.`), mantendo o site da Wix como está; ou (2) decidir, junto com a coordenação, mudar o domínio inteiro para o sistema, só depois de migrar o conteúdo que ainda é da Wix. Comece pelo subdomínio: dá para desfazer apagando um registro.
+  - Atualizar os links de divulgação e, se houver, o link do sistema dentro do site da Wix.
+  - O endereço `mmcenaculo.vercel.app` continua funcionando.
 - [ ] **Supabase, plano grátis:** o banco não tem backup automático (ver [BACKUP.md](BACKUP.md)). Confira também a regra de **pausa por inatividade** do plano grátis (projetos sem uso por cerca de 1 semana podem ser pausados, e o site para de funcionar até alguém reativar): se houver um período longo sem inscrições, entre no painel do Supabase de vez em quando, ou considere o plano pago perto do evento.
 - [ ] **Vercel, plano Hobby:** confira nos termos do plano se o uso pelo movimento se enquadra (o Hobby é para uso pessoal/não comercial).
 - [ ] O **CI no GitHub** está verde na `main` (testes e e2e).
@@ -93,6 +96,21 @@ Faça tudo **no celular**, pela internet comum (não no Wi-Fi do computador), co
 - [ ] **Pedidos de dados:** o roteiro está em [LGPD.md](LGPD.md), seção 5 (resposta em até 15 dias).
 - [ ] **Se algo quebrar:** Vercel → Deployments → o último deploy → *Logs*; no Supabase, a tela de *Logs*. E o `npm run test:e2e` e o `npm test` no computador mostram se foi uma mudança de código.
 
-## 8. Fora do escopo agora (ideias para depois)
+## 8. Calendário sugerido (inscrições reais só em maio de 2027)
+
+Como as inscrições reais só começam por volta de **maio de 2027**, o sistema vai ficar parado por meses. Sugestão:
+
+| Quando | O que |
+| --- | --- |
+| **Agora** | Backup da produção (seção 0). Combinar o texto e o contato com a coordenação. |
+| **A cada mês até lá** | Abrir o site e o painel (isso também mantém o projeto ativo no Supabase). Atualizar dependências se houver aviso de segurança (`npm audit --omit=dev`). |
+| **~Janeiro de 2027** | Seção 1 (textos revisados pela coordenação) e a decisão do domínio. |
+| **~Fevereiro/março de 2027** | Domínio (seção 5), contas da coordenação (seção 4) e backup. |
+| **~Abril de 2027** | Limpar os dados de teste (seção 2), criar os eventos reais (seção 3) e o **ensaio no celular** (seção 6). |
+| **Maio de 2027** | Abrir as inscrições; rotina da seção 7. |
+
+**Período parado:** o plano grátis do Supabase pode **pausar** o projeto depois de cerca de 1 semana sem uso (confira a regra atual no painel deles). Se pausar, o painel avisa e dá para **reativar** pelo botão do Supabase; passado muito tempo, a restauração pode deixar de ser possível, e por isso o backup mensal importa. Se o site abrir com erro de banco, o primeiro lugar a olhar é o painel do Supabase.
+
+## 9. Fora do escopo agora (ideias para depois)
 
 Editar inscrições pelo painel, e-mail de confirmação, usar a primeira foto da galeria como capa de evento concluído, relatórios por paróquia. Ver o passo 13 do cronograma.
