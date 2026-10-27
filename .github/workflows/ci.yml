@@ -34,9 +34,9 @@ jobs:
       DATABASE_URL_TESTE: postgresql://ci:ci@localhost:5432/cenaculodb_test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -81,9 +81,9 @@ jobs:
       DATABASE_URL_TESTE: postgresql://ci:ci@localhost:5432/cenaculodb_test
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -97,7 +97,7 @@ jobs:
       - run: npm run test:e2e
 
       # Se algum teste falhar, guarda o relatório (com capturas de tela) para baixar na aba Actions.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: relatorio-e2e
