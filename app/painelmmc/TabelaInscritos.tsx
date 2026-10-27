@@ -90,8 +90,8 @@ export default function TabelaInscritos({ inscricoes, excluirInscricao }: { insc
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left border-collapse">
-            <thead>
+          <table className="w-full md:min-w-[980px] text-left border-collapse block md:table">
+            <thead className="hidden md:table-header-group">
               <tr className="bg-gray-50 text-gray-700">
                 <th className="p-4 font-bold text-sm">Nome / Contato</th>
                 <th className="p-4 font-bold text-sm">Evento</th>
@@ -100,10 +100,10 @@ export default function TabelaInscritos({ inscricoes, excluirInscricao }: { insc
                 <th className="p-4 font-bold text-sm">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 block md:table-row-group">
               {inscricoesProcessadas.map((inscricao) => (
-                <tr key={inscricao.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 align-top w-1/3">
+                <tr key={inscricao.id} className="block md:table-row py-2 md:py-0 hover:bg-gray-50 transition-colors">
+                  <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/3">
                     <div className="font-extrabold text-cenaculo-blue text-lg">{inscricao.nomeCompleto}</div>
                     <div className="text-sm text-gray-500 font-medium mt-1">{inscricao.telefone}</div>
                     <div className="text-sm text-gray-500">{inscricao.email}</div>
@@ -113,23 +113,23 @@ export default function TabelaInscritos({ inscricoes, excluirInscricao }: { insc
                     </div>
                     <ModalDetalhes inscricao={inscricao} />
                   </td>
-                  <td className="p-4 align-top w-1/6">
+                  <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/6">
                     <div className="font-bold text-cenaculo-blue text-sm">{inscricao.evento.nome}</div>
                     <div className="text-xs text-gray-500 mt-1">{new Date(inscricao.evento.dataInicio).toLocaleDateString("pt-BR", { timeZone: "UTC" })}</div>
                     <div className="text-xs text-gray-400 mt-2">Inscrito em {new Date(inscricao.criadoEm).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</div>
                   </td>
-                  <td className="p-4 align-top w-1/5">
+                  <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/5">
                     <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${inscricao.jaFezCenaculo !== "Não fez" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{inscricao.jaFezCenaculo}</div>
                     <div className="text-sm text-gray-600"><span className="font-semibold text-gray-800">Paróquia:</span> {inscricao.paroquiaAtuante || "-"}</div>
                   </td>
-                  <td className="p-4 align-top text-sm w-1/4">
+                  <td className="block md:table-cell px-4 py-3 md:p-4 align-top text-sm w-1/4">
                     {inscricao.problemaSaude && <div className="mb-1"><span className="font-bold text-red-600">Saúde:</span> {inscricao.problemaSaude}</div>}
                     {inscricao.restricaoAlimentar && <div className="mb-1"><span className="font-bold text-orange-600">Alimentar:</span> {inscricao.restricaoAlimentar}</div>}
                     {inscricao.medicacaoControlada && <div className="mb-1"><span className="font-bold text-blue-600">Remédio:</span> {inscricao.medicacaoControlada}</div>}
                     {inscricao.atendimentoEspecial && <div className="mb-1"><span className="font-bold text-purple-600">Especial:</span> {inscricao.atendimentoEspecial}</div>}
                     {!inscricao.problemaSaude && !inscricao.restricaoAlimentar && !inscricao.medicacaoControlada && !inscricao.atendimentoEspecial && <span className="text-gray-400 italic">Nenhuma restrição</span>}
                   </td>
-<td className="p-4 align-top w-1/4">
+<td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/4">
                     <div className="flex flex-col gap-2">
                       <GerenciadorNotas inscricaoId={inscricao.id} observacoes={inscricao.observacoes} />
                       <BotaoDeletar 

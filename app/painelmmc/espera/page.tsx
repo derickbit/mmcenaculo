@@ -55,8 +55,8 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50">
+          <table className="w-full text-left border-collapse block md:table">
+            <thead className="bg-gray-50 hidden md:table-header-group">
               <tr>
                 <th className="p-4 font-semibold text-sm text-gray-600">Interesse em</th>
                 <th className="p-4 font-semibold text-sm text-gray-600">Nome do Participante</th>
@@ -64,29 +64,29 @@ export default async function EsperaPage({ searchParams }: { searchParams: Promi
                 <th className="p-4 font-semibold text-sm text-gray-600 text-center">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 block md:table-row-group">
               {preCadastros.map(pre => (
-                <tr key={pre.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={pre.id} className="block md:table-row py-2 md:py-0 hover:bg-gray-50 transition-colors">
                   
-                  <td className="p-4">
+                  <td className="block md:table-cell px-4 py-2 md:p-4">
                     <span className="bg-blue-100 text-cenaculo-blue px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                       {ROTULOS_TIPO[pre.tipo] ?? pre.tipo}
                     </span>
                   </td>
                   
-                  <td className="p-4">
+                  <td className="block md:table-cell px-4 py-2 md:p-4">
                     <div className="font-bold text-gray-900">{pre.nome}</div>
                     <div className="text-xs text-gray-400 mt-1">
                       Registrado em: {new Date(pre.criadoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
                     </div>
                   </td>
                   
-                  <td className="p-4 text-sm text-gray-600">
+                  <td className="block md:table-cell px-4 py-2 md:p-4 text-sm text-gray-600">
                     <div className="font-medium text-gray-800">{pre.telefone}</div>
                     <div className="text-gray-500">{pre.email}</div>
                   </td>
                   
-                  <td className="p-4 text-center">
+                  <td className="block md:table-cell px-4 py-2 md:p-4 text-center">
                     <form action={excluirPreCadastro}>
                       <input type="hidden" name="id" value={pre.id} />
                       <button 

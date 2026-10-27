@@ -49,7 +49,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <p className="text-gray-600 mt-2">Gerencie os participantes inscritos em cada retiro. Cada inscrição mostra a qual evento pertence.</p>
         </div>
         
-        <div className="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
           <label className="text-sm font-bold text-gray-700 whitespace-nowrap">Filtrar por Evento:</label>
           <FiltroEventos eventos={eventos} eventoSelecionadoId={eventoSelecionadoId} />
         </div>

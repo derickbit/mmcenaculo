@@ -42,7 +42,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-full md:w-auto">
           <label className="text-sm font-bold text-gray-700 whitespace-nowrap">Filtrar por Evento:</label>
           <FiltroEventos eventos={eventos} eventoSelecionadoId={eventoId} rota="/painelmmc/kids" />
         </div>
@@ -57,8 +57,8 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left border-collapse">
-            <thead>
+          <table className="w-full md:min-w-[980px] text-left border-collapse block md:table">
+            <thead className="hidden md:table-header-group">
               <tr className="bg-gray-50 text-gray-700">
                 <th className="p-4 font-bold text-sm">Criança</th>
                 <th className="p-4 font-bold text-sm">Evento</th>
@@ -67,13 +67,13 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
                 <th className="p-4 font-bold text-sm">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 block md:table-row-group">
               {inscricoes.map((i) => {
                 const idade = idadeEm(i.criancaNascimento, i.evento.dataInicio);
                 const fora = foraDaFaixaKids(i.criancaNascimento, i.evento.dataInicio);
                 return (
-                  <tr key={i.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 align-top w-1/4">
+                  <tr key={i.id} className="block md:table-row py-2 md:py-0 hover:bg-gray-50 transition-colors">
+                    <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/4">
                       <div className="font-extrabold text-cenaculo-blue text-lg">{i.criancaNome}</div>
                       <div className="text-sm text-gray-600 mt-1">
                         {idade} anos no evento · nasc. {i.criancaNascimento.toLocaleDateString("pt-BR", { timeZone: "UTC" })}
@@ -85,7 +85,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
                       )}
                     </td>
 
-                    <td className="p-4 align-top w-1/6 text-sm">
+                    <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/6 text-sm">
                       <div className="font-bold text-cenaculo-blue">{i.evento.nome}</div>
                       <div className="text-xs text-gray-500 mt-1">{i.evento.dataInicio.toLocaleDateString("pt-BR", { timeZone: "UTC" })}</div>
                       <div className="text-xs text-gray-400 mt-2">
@@ -93,7 +93,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
                       </div>
                     </td>
 
-                    <td className="p-4 align-top w-1/4 text-sm">
+                    <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/4 text-sm">
                       <div className="font-bold text-gray-800">{i.responsavelNome}</div>
                       <div className="text-gray-500">{PARENTESCO_ROTULOS[i.parentesco as Parentesco] ?? i.parentesco}</div>
                       <div className="text-gray-600 mt-1">{i.responsavelTelefone}</div>
@@ -103,7 +103,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
                       </div>
                     </td>
 
-                    <td className="p-4 align-top w-1/4 text-sm">
+                    <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/4 text-sm">
                       {i.saudeComEquipe ? (
                         <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
                           Falar com a equipe no dia
@@ -117,7 +117,7 @@ export default async function KidsPage({ searchParams }: { searchParams: Promise
                       )}
                     </td>
 
-                    <td className="p-4 align-top w-1/4">
+                    <td className="block md:table-cell px-4 py-3 md:p-4 align-top md:w-1/4">
                       <div className="flex flex-col gap-2">
                         <GerenciadorNotas inscricaoId={i.id} observacoes={i.observacoes} tipo="KIDS" />
                         <BotaoDeletar

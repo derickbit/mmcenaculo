@@ -167,8 +167,8 @@ export default function GerenciadorUsuarios({ usuarios, convites }: { usuarios: 
       <section>
         <h2 className="text-xl font-bold text-gray-800 mb-3">Contas</h2>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left">
-            <thead className="bg-gray-50 text-gray-700 text-sm">
+          <table className="w-full md:min-w-[760px] text-left block md:table">
+            <thead className="bg-gray-50 text-gray-700 text-sm hidden md:table-header-group">
               <tr>
                 <th className="p-4 font-bold">Usuário</th>
                 <th className="p-4 font-bold">Cargo</th>
@@ -177,13 +177,13 @@ export default function GerenciadorUsuarios({ usuarios, convites }: { usuarios: 
                 <th className="p-4 font-bold">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 block md:table-row-group">
               {usuarios.map((u) => {
                 const coordenacao = u.papel === "COORDENACAO";
                 const emEdicao = editando?.id === u.id;
                 return (
-                  <tr key={u.id} className={u.ativo ? "" : "bg-gray-50 text-gray-500"}>
-                    <td className="p-4 align-top font-bold">
+                  <tr key={u.id} className={`block md:table-row py-2 md:py-0 ${u.ativo ? "" : "bg-gray-50 text-gray-500"}`}>
+                    <td className="block md:table-cell px-4 py-2 md:p-4 align-top font-bold">
                       {emEdicao ? (
                         <div className="flex gap-2">
                           <input
@@ -209,14 +209,14 @@ export default function GerenciadorUsuarios({ usuarios, convites }: { usuarios: 
                         </p>
                       )}
                     </td>
-                    <td className="p-4 align-top text-sm">{coordenacao ? "Coordenação" : "Administrador"}</td>
-                    <td className="p-4 align-top">
+                    <td className="block md:table-cell px-4 py-2 md:p-4 align-top text-sm">{coordenacao ? "Coordenação" : "Administrador"}</td>
+                    <td className="block md:table-cell px-4 py-2 md:p-4 align-top">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${u.ativo ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>
                         {u.ativo ? "Ativa" : "Desativada"}
                       </span>
                     </td>
-                    <td className="p-4 align-top text-sm">{quando(u.criadoEm)}</td>
-                    <td className="p-4 align-top">
+                    <td className="block md:table-cell px-4 py-2 md:p-4 align-top text-sm">{quando(u.criadoEm)}</td>
+                    <td className="block md:table-cell px-4 py-2 md:p-4 align-top">
                       {coordenacao ? (
                         <div className="flex flex-wrap gap-2">
                           <button type="button" disabled={ocupado} onClick={() => { setErroLinha(null); setEditando({ id: u.id, valor: u.nome }); }} className={`${botao} border-gray-300 text-gray-700 hover:bg-gray-50`}>
@@ -253,8 +253,8 @@ export default function GerenciadorUsuarios({ usuarios, convites }: { usuarios: 
       <section>
         <h2 className="text-xl font-bold text-gray-800 mb-3">Convites e redefinições de senha</h2>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left">
-            <thead className="bg-gray-50 text-gray-700 text-sm">
+          <table className="w-full md:min-w-[760px] text-left block md:table">
+            <thead className="bg-gray-50 text-gray-700 text-sm hidden md:table-header-group">
               <tr>
                 <th className="p-4 font-bold">Usuário</th>
                 <th className="p-4 font-bold">Tipo</th>
@@ -263,12 +263,12 @@ export default function GerenciadorUsuarios({ usuarios, convites }: { usuarios: 
                 <th className="p-4 font-bold">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 block md:table-row-group">
               {convites.map((c) => (
-                <tr key={c.id}>
-                  <td className="p-4 align-top font-bold">{c.usuario}</td>
-                  <td className="p-4 align-top text-sm">{c.tipo === "REDEFINICAO" ? "Redefinição de senha" : "Nova conta"}</td>
-                  <td className="p-4 align-top">
+                <tr key={c.id} className="block md:table-row py-2 md:py-0">
+                  <td className="block md:table-cell px-4 py-2 md:p-4 align-top font-bold">{c.usuario}</td>
+                  <td className="block md:table-cell px-4 py-2 md:p-4 align-top text-sm">{c.tipo === "REDEFINICAO" ? "Redefinição de senha" : "Nova conta"}</td>
+                  <td className="block md:table-cell px-4 py-2 md:p-4 align-top">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${ROTULO_ESTADO[c.estado].classe}`}>{ROTULO_ESTADO[c.estado].texto}</span>
                     <div className="text-xs text-gray-500 mt-1">
                       {c.estado === "VALIDO" && `vale até ${quando(c.expiraEm)}`}
@@ -277,11 +277,11 @@ export default function GerenciadorUsuarios({ usuarios, convites }: { usuarios: 
                       {c.estado === "EXPIRADO" && `venceu em ${quando(c.expiraEm)}`}
                     </div>
                   </td>
-                  <td className="p-4 align-top text-sm">
+                  <td className="block md:table-cell px-4 py-2 md:p-4 align-top text-sm">
                     {quando(c.criadoEm)}
                     <div className="text-xs text-gray-500">por {c.criadoPor}</div>
                   </td>
-                  <td className="p-4 align-top">
+                  <td className="block md:table-cell px-4 py-2 md:p-4 align-top">
                     {c.estado === "VALIDO" && (
                       <button type="button" disabled={ocupado} onClick={() => revogar(c.id)} className={`${botao} border-red-200 text-red-600 hover:bg-red-50`}>
                         Revogar
