@@ -17,6 +17,9 @@ export default function NavbarPublica() {
   const [aberto, setAberto] = useState(false);
   const pathname = usePathname();
 
+  // O painel tem menu próprio: nada da barra pública por lá.
+  if (pathname.startsWith("/painelmmc")) return null;
+
   return (
     <nav className="bg-cenaculo-blue text-white sticky top-0 z-40 shadow-md border-b border-cenaculo-gold/30">
       <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-12 h-20 flex items-center justify-between gap-4">

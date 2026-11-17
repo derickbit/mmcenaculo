@@ -24,7 +24,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
     const eventoAlvo = todosEventos.find(ev => ev.id === eventoEscolhidoId);
     if (eventoAlvo && getStatusReal(eventoAlvo) !== "ABERTO") {
       return (
-        <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <main className="flex-1 w-full bg-gray-50 flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-cenaculo-blue text-center max-w-md">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-3">Inscrições Indisponíveis</h2>
             <p className="text-gray-600 mb-8">
@@ -42,7 +42,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
   // CENÁRIO 1: Nenhum evento aberto -> RENDERIZA A LISTA DE ESPERA
   if (eventosAbertos.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12 flex items-center justify-center">
+      <main className="flex-1 w-full bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12 flex items-center justify-center">
         <div className="max-w-xl w-full bg-white p-8 md:p-12 rounded-2xl shadow-xl border-t-8 border-cenaculo-gold">
           
           <ListaEspera />
@@ -63,7 +63,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
   // CENÁRIO 2: O usuário já sabe qual evento quer (ou só tem 1 aberto)
   if (eventoParaFormulario) {
     return (
-      <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12">
+      <main className="flex-1 w-full bg-gray-50 py-12 px-4 sm:px-6 lg:px-10 xl:px-12">
         {eventosAbertos.length > 1 && (
           <div className={`mx-auto mb-4 ${eventoParaFormulario.tipo === "KIDS" ? "max-w-3xl" : "max-w-5xl"}`}>
             <Link href="/inscricao" className="text-sm font-semibold text-cenaculo-blue hover:text-cenaculo-gold transition">
@@ -90,7 +90,7 @@ export default async function InscricaoPage({ searchParams }: { searchParams: Pr
 
   // CENÁRIO 3: Tem mais de um aberto e a pessoa ainda não escolheu
   return (
-    <main className="min-h-screen bg-gray-50 py-16 px-4 sm:px-6 lg:px-10 xl:px-12">
+    <main className="flex-1 w-full bg-gray-50 py-16 px-4 sm:px-6 lg:px-10 xl:px-12">
       <div className="max-w-5xl w-full mx-auto text-center mb-12">
         <h1 className="text-4xl font-extrabold text-cenaculo-blue mb-4">
           Escolha o seu <span className="text-cenaculo-gold">Retiro</span>
