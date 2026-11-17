@@ -40,7 +40,7 @@ export default function PainelShell({
   ];
 
   return (
-    <div className="w-full bg-gray-100 flex flex-col md:flex-row md:overflow-hidden md:h-[calc(100dvh-5rem)] md:min-h-[calc(100dvh-5rem)]">
+    <div className="w-full bg-gray-100 flex flex-col md:flex-row md:overflow-hidden md:h-dvh">
 
       <aside className="w-full md:w-64 md:h-full md:flex-shrink-0 bg-cenaculo-blue text-white flex flex-col shadow-xl z-20">
         <div className="px-4 py-3 md:p-6 flex items-center justify-between border-b border-[#1a1d7a]">
@@ -86,6 +86,9 @@ export default function PainelShell({
                 {nomeUsuario} · {papel === "ADMIN" ? "Administrador" : "Coordenação"}
               </p>
             )}
+            <Link href="/" className="block p-3 text-blue-200 hover:bg-[#1a1d7a] rounded-lg transition-colors text-sm">
+              &larr; Ver site público
+            </Link>
             <button onClick={handleLogout} className="w-full text-left p-3 text-red-300 hover:bg-red-500 hover:text-white rounded-lg transition-colors font-semibold">
               Sair do Sistema
             </button>

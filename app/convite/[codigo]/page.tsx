@@ -15,7 +15,7 @@ export default async function ConvitePage({ params }: { params: Promise<{ codigo
   // Link inválido, vencido, já usado ou revogado: a MESMA mensagem para todos, para ninguém descobrir se um código já existiu.
   if (estado !== "VALIDO" || !convite) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="flex-1 w-full bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border-t-8 border-cenaculo-blue text-center">
           <h1 className="text-2xl font-extrabold text-gray-900 mb-3">Convite inválido ou expirado</h1>
           <p className="text-gray-600 mb-8">Este link não pode mais ser usado. Peça um novo convite a quem enviou este.</p>
@@ -28,7 +28,7 @@ export default async function ConvitePage({ params }: { params: Promise<{ codigo
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <main className="flex-1 w-full bg-gray-50 flex items-center justify-center p-4">
       <FormularioConvite codigo={codigo} nomeUsuario={convite.nomeUsuario} redefinicao={convite.usuarioAlvoId !== null} />
     </main>
   );

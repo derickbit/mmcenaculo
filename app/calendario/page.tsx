@@ -12,7 +12,7 @@ export default async function CalendarioPage() {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col pb-20">
+    <main className="flex-1 w-full bg-gray-50 flex flex-col pb-20">
       <header className="bg-cenaculo-blue text-white py-20 px-6 text-center shadow-inner w-full">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Linha do Tempo de <span className="text-cenaculo-gold">Eventos</span></h1>

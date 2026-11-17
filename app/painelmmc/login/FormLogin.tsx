@@ -40,7 +40,7 @@ if (response.ok) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <main className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border-t-8 border-cenaculo-blue">
         
         <div className="text-center mb-8">

@@ -79,7 +79,7 @@ export default function SobrePage() {
   const infoGrupo = GRUPOS_POS_CENACULO.find(g => g.id === grupoAtivo);
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col pb-20">
+    <main className="flex-1 w-full bg-gray-50 flex flex-col pb-20">
       
       {/* HEADER DA PÁGINA */}
       <header className="bg-cenaculo-blue text-white py-20 px-6 text-center shadow-inner w-full">

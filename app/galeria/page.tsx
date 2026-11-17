@@ -18,7 +18,7 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
     });
 
     return (
-      <main className="min-h-screen bg-gray-50 flex flex-col pb-20">
+      <main className="flex-1 w-full bg-gray-50 flex flex-col pb-20">
         {/* O fundo azul estica a 100%, mas o conteúdo central expande até max-w-7xl */}
         <header className="bg-cenaculo-blue text-white py-20 px-6 text-center shadow-inner w-full">
           <div className="max-w-screen-2xl mx-auto">
@@ -63,7 +63,7 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
 
   if (!evento) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="flex-1 w-full bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Evento não encontrado.</h2>
           <Link href="/galeria" className="text-cenaculo-blue underline">Voltar para a Galeria</Link>
@@ -73,7 +73,7 @@ export default async function GaleriaPage({ searchParams }: { searchParams: Prom
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col pb-20">
+    <main className="flex-1 w-full bg-gray-50 flex flex-col pb-20">
       <header className="bg-cenaculo-blue text-white py-16 px-6 text-center shadow-inner w-full">
         <div className="max-w-screen-2xl mx-auto">
           <h1 className="text-4xl font-extrabold mb-2">Galeria de <span className="text-cenaculo-gold">Fotos</span></h1>

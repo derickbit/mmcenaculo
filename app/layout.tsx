@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import NavbarPublica from "./NavbarPublica";
+import Rodape from "./Rodape";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,6 +26,8 @@ export default function RootLayout({
         <div className="flex-1 flex flex-col min-h-0 w-full">
           {children}
         </div>
+
+        <Rodape />
 
       </body>
     </html>
